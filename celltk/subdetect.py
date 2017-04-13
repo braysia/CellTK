@@ -21,15 +21,6 @@ def make_dirs(path):
             raise
 
 
-def neg2poslabels(labels):
-    maxint = labels.max()
-    negatives = np.unique(labels[labels < 0])
-    for i in negatives:
-        maxint += 1
-        labels[labels == i] = maxint
-    return labels
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--images", help="images", nargs="*", default=[])
