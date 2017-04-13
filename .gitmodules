@@ -1,0 +1,3 @@
+[submodule "celltk/LabeledArray"]
+	path = celltk/LabeledArray
+	url = https://github.com/braysia/LabeledArray

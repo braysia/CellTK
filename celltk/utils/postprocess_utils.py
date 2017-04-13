@@ -11,6 +11,30 @@ class _RegionProperties2(_RegionProperties):
     def total_intensity(self):
         return np.sum(self.intensity_image[self.image])
 
+    @property
+    def x(self):
+        return self.centroid[1]
+
+    @property
+    def y(self):
+        return self.centroid[0]
+
+    @property
+    def median_intensity(self):
+        return np.median(self.intensity_image[self.image])
+
+    @property
+    def std_intensity(self):
+        return np.std(self.intensity_image[self.image])
+
+    @property
+    def cv_intensity(self):
+        return self.std_intensity/self.mean_intensity
+
+    @property
+    def cell_id(self):
+        return self.label
+
 
 def regionprops(label_image, intensity_image=None, cache=True):
     label_image = np.squeeze(label_image)
