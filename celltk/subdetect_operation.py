@@ -1,4 +1,5 @@
 from utils.subdetect_utils import dilate_to_cytoring
+from utils.concave_seg import levelset_geo_separete
 
 
 def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
@@ -16,3 +17,11 @@ def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
                [ 0, 10, 10, 10,  0]], dtype=uint16)
     """
     return dilate_to_cytoring(labels, RINGWIDTH, MARGIN)
+
+
+def geodesic_levelset(labels, img, NITER=10, PROP=1):
+    """propagated outwards until it sticks to the shape boundaries in an image.
+    Generally used for making/repairing too small objects bigger.
+    Larger NITER will give more propagation and roundy object.
+    """
+    return levelset_geo_separete(img, labels, niter=NITER, prop=PROP)

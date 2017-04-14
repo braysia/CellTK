@@ -14,3 +14,6 @@ def example_thres(img, THRES=2000):
                [0, 0, 2]])
     """
     return label(img > THRES)
+
+
+
