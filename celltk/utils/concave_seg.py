@@ -9,6 +9,7 @@ from scipy.ndimage import binary_erosion
 from mahotas.segmentation import gvoronoi
 from skimage.segmentation import find_boundaries
 from skimage.morphology import thin
+from functools import partial
 
 
 def cut_neck(template, r0, c0, r1, c1):
@@ -22,7 +23,7 @@ def cut_neck(template, r0, c0, r1, c1):
 
 def make_candidates(cl_label, s0, s1, e0, e1):
     cut_label = cut_neck(cl_label, s0, s1, e0, e1)
-    cand_label = label(cut_label, conn=1)
+    cand_label = label(cut_label, connectivity=1)
     cand_rps = regionprops(cand_label)
     return cand_rps
 
@@ -351,20 +352,6 @@ def cut_labels(labels, coords_set):
     return labels
 
 
-def run_cut(img, labels, small_rad, large_rad, EDGELEN=6, THRES=180):
-    largela = extract_large(labels, AREA=np.pi * large_rad**2)
-    smallla = extract_small(labels, AREA=np.pi * large_rad**2)
-    wlines = wshed_raw(labels > 0, img)
-    store = []
-    for i in np.unique(largela):
-        if i == 0:
-            continue
-        cc = CellCutter(labels==i, img, wlines, small_rad, large_rad, EDGELEN=EDGELEN, THRES=THRES)
-        cc.run()
-        store.append(cc.cut_coords)
-    return store
-
-
 def levelset_geo_separete(img, labels, niter=10, prop=1):
     seg = sitk.GetImageFromArray((labels > 0).astype(np.uint8))
     init_ls = sitk.SignedMaurerDistanceMap(seg, insideIsPositive=True, useImageSpacing=True)
@@ -384,3 +371,23 @@ def levelset_geo_separete(img, labels, niter=10, prop=1):
 
     ls = lsFilter.Execute(init_ls, sitk.Cast(img_T1, sitk.sitkFloat32))
     return label(sitk.GetArrayFromImage(ls) > 0, connectivity=1)
+
+
+def get_cut_coords(img, labels, small_rad, large_rad, EDGELEN=6, THRES=180):
+    largela = extract_large(labels, AREA=np.pi * large_rad**2)
+    wlines = wshed_raw(labels > 0, img)
+    store = []
+    for i in np.unique(largela):
+        if i == 0:
+            continue
+        cc = CellCutter(labels==i, img, wlines, small_rad=small_rad, large_rad=large_rad, EDGELEN=EDGELEN, THRES=THRES)
+        cc.run()
+        store.append(cc.cut_coords)
+    return store
+
+
+def run_concave_cut(img, labels, small_rad, large_rad, EDGELEN=6, THRES=180):
+
+    store = get_cut_coords(img, labels, small_rad, large_rad, EDGELEN=EDGELEN, THRES=THRES)
+    labels = label(cut_labels(labels, [i for j in store for i in j]), connectivity=1)
+    return labels

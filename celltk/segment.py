@@ -1,6 +1,5 @@
 """
-python celltk/segmentation.py -i ~/covertrack/data/testimages/img_0000000* -f examp
-le_thres -o c1 THRES=2000
+python celltk/segment.py -i ~/covertrack/data/testimages/img_0000000* -f example_thres -o c1 -p THRES=2000
 """
 
 
@@ -12,6 +11,12 @@ import numpy as np
 import os
 import segment_operation
 import ast
+from skimage.segmentation import clear_border
+from utils.filters import gray_fill_holes
+from skimage.morphology import remove_small_objects
+# from skimage.morphology import remove_small_holes
+from utils.filters import label
+from scipy.ndimage.morphology import binary_opening
 
 
 def make_dirs(path):
@@ -22,6 +27,18 @@ def make_dirs(path):
             raise
 
 
+def clean_labels(labels, rad, OPEN=2):
+    """default cleaning. Fill holes, remove small and large objects and opening.
+    """
+    labels = gray_fill_holes(labels)
+    labels = clear_border(labels, buffer_size=2)
+    labels = remove_small_objects(labels, rad[0]**2 * np.pi, connectivity=4)
+    antimask = remove_small_objects(labels, rad[1]**2 * np.pi, connectivity=4)
+    labels[antimask] = False
+    labels = label(binary_opening(labels, np.ones((int(OPEN), int(OPEN))), iterations=1))
+    return labels
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="images", nargs="*")
@@ -29,6 +46,8 @@ def main():
                         type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="*")
     parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="))
+    parser.add_argument("-r", "--radius", help="minimum and maximum radius", nargs=2, default=[3, 50])
+    parser.add_argument("--open", help="OPENING parameters", nargs=1, default=2)
     args = parser.parse_args()
     make_dirs(args.output)
     param = dict(args.param)
@@ -40,7 +59,9 @@ def main():
         for function in args.functions:
             func = getattr(segment_operation, function)
             img = func(img, **param)
-        tiff.imsave(join(args.output, basename(path)), img.astype(np.float32))
+        labels = clean_labels(img, args.radius, args.open)
+        tiff.imsave(join(args.output, basename(path)), labels.astype(np.float32))
+
 
 if __name__ == "__main__":
     main()

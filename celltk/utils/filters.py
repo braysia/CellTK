@@ -13,14 +13,14 @@ from scipy.ndimage.filters import gaussian_filter
 import SimpleITK as sitk
 
 
-def watershed(labels, regmax):
+def label_watershed(labels, regmax):
     # Since there are non-unique values for dist, add very small numbers. This will separate each marker by regmax at least.
     dist = distance_transform_edt(labels) + np.random.rand(*labels.shape)*1e-10
     labeled_maxima = label(peak_local_max(dist, min_distance=int(regmax), indices=False))
     wshed = -dist
     wshed = wshed - np.min(dist)
     markers = np.zeros(wshed.shape, np.int16)
-    markers[labeled_maxima>0]= -labeled_maxima[labeled_maxima>0]
+    markers[labeled_maxima > 0] = -labeled_maxima[labeled_maxima > 0]
     wlabel = skiwatershed(wshed, markers, connectivity=np.ones((3,3), bool), mask=labels!=0)
     wlabel = -wlabel
     wlabel = labels.max() + wlabel
@@ -62,12 +62,13 @@ def labels2outlines(labels):
     return outlines
 
 
-def adaptive_thresh(img, RATIO=3.0, FILTERINGSIZE=50):
+def adaptive_thresh(img, R=1, FILTERINGSIZE=50):
     """Segment as a foreground if pixel is higher than ratio * blurred image.
-    If you set ratio 3.0, it will pick the pixels 300 percent brighter than the blurred image.
+    If you set R=10, it will pick a pixel if a pixel in the raw image is at
+    least 10% brighter than the blurred image.
     """
     fim = gaussian_filter(img, FILTERINGSIZE)
-    bw = img > (fim * RATIO)
+    bw = img > (fim * (1 + R/100))
     return bw
 
 
@@ -78,3 +79,48 @@ def calc_lapgauss(img, SIGMA=2.5):
     csimg = sitk.GetImageFromArray(img)
     slap = fil.Execute(csimg)
     return sitk.GetArrayFromImage(slap)
+
+
+def gray_fill_holes(labels):
+    '''This will fill holes of gray int images'''
+    # labels = np.int32(labels)
+    # labels = np.pad(labels, pad_width=1, mode='constant', constant_values=-100000)
+    # blabel = labels.copy()
+    # blabel[1:-1, 1:-1] = 100000
+    # fim = reconstruction(neg(blabel), neg(labels))
+    # fim = neg(np.int32(fim))
+    # fim = fim[1:-1, 1:-1]
+    # return fim
+    fil = sitk.GrayscaleFillholeImageFilter()
+    return sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(labels)))
+
+
+def sitk_watershed_intensity(img, local_maxima):
+    seedimage = sitk.GetImageFromArray(local_maxima.astype(np.uint16))#
+
+    img = img.astype(np.float32)
+    nimg = sitk.GetImageFromArray(img)
+    nimg = sitk.GradientMagnitude(nimg)#
+
+    fil = sitk.MorphologicalWatershedFromMarkersImageFilter()
+    fil.FullyConnectedOn()
+    fil.MarkWatershedLineOff()
+    oimg1 = fil.Execute(nimg, seedimage)
+    labelim = sitk.GetArrayFromImage(oimg1)
+    return labelim
+
+
+def lap_local_max(img, sigma_list, THRES):
+    img = np.uint16(img)
+    lapimages = []
+    for sig in sigma_list:
+        simg = sitk.GetImageFromArray(img)
+        nimg = sitk.LaplacianRecursiveGaussian(image1=simg, sigma=sig)
+        lapimages.append(-sitk.GetArrayFromImage(nimg))
+
+    image_cube = np.dstack(lapimages)
+    local_maxima = peak_local_max(image_cube, threshold_abs=THRES, footprint=np.ones((3, 3, 3)), threshold_rel=0.0, exclude_border=False, indices=False)
+
+    local_maxima = local_maxima.sum(axis=2)
+    local_maxima = label(local_maxima)
+    return local_maxima
