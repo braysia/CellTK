@@ -11,6 +11,9 @@ from scipy.ndimage.filters import maximum_filter
 from skimage.draw import line
 from scipy.ndimage.filters import gaussian_filter
 import SimpleITK as sitk
+from morphsnakes import MorphACWE, curvop
+from mahotas.segmentation import gvoronoi
+from skimage.morphology import thin
 
 
 def label_watershed(labels, regmax):
@@ -124,3 +127,89 @@ def lap_local_max(img, sigma_list, THRES):
     local_maxima = local_maxima.sum(axis=2)
     local_maxima = label(local_maxima)
     return local_maxima
+
+
+class MultiSnakes(MorphACWE):
+    def __init__(self, img, labels, smoothing=1, lambda1=1, lambda2=1):
+        super(MultiSnakes, self).__init__(img, smoothing, lambda1, lambda2)
+        self.levelset = labels
+
+    def multi_step(self, niter=1):
+        for i in range(niter):
+            self.step()
+        return self.return_labels()
+
+    def step(self):
+        # Assign attributes to local variables for convenience.
+        u = self._u
+
+        if u is None:
+            raise ValueError("the levelset function is not set (use set_levelset)")
+
+        data = self.data
+
+        # Determine c0 and c1.
+        inside = u>0
+        outside = u<=0
+        c0 = data[outside].sum() / float(outside.sum())
+        c1 = data[inside].sum() / float(inside.sum())
+
+        # Image attachment.
+        dres = np.array(np.gradient(u))
+        abs_dres = np.abs(dres).sum(0)
+        aux = abs_dres * (self.lambda1*(data - c1)**2 - self.lambda2*(data - c0)**2)
+
+        mask = find_boundaries(gvoronoi(label(u, connectivity=1)), mode='inner')
+        aux[mask] = 1
+
+        res = np.copy(u)
+        res[aux < 0] = 1
+        res[aux > 0] = 0
+
+        # Smoothing.
+        for i in range(self.smoothing):
+            res = curvop(res)
+        self._u = res
+
+    def return_labels(self):
+        return label(self.levelset, connectivity=1)
+
+
+class MultiSnakesCombined(MultiSnakes):
+    def multi_step(self, niter=1):
+        for i in range(niter-1):
+            self.step()
+        self.step_last()
+        return self.return_labels()
+
+    def step_last(self):
+        # Assign attributes to local variables for convenience.
+        u = self._u
+        mask = thin(find_boundaries(gvoronoi(label(u, connectivity=1)), mode='inner'))
+
+        if u is None:
+            raise ValueError("the levelset function is not set (use set_levelset)")
+
+        data = self.data
+
+        # Determine c0 and c1.
+        inside = u>0
+        outside = u<=0
+        c0 = data[outside].sum() / float(outside.sum())
+        c1 = data[inside].sum() / float(inside.sum())
+
+        # Image attachment.
+        dres = np.array(np.gradient(u))
+        abs_dres = np.abs(dres).sum(0)
+        aux = abs_dres * (self.lambda1*(data - c1)**2 - self.lambda2*(data - c0)**2)
+
+        res = np.copy(u)
+        res[aux < 0] = 1
+        res[aux > 0] = 0
+
+        # Smoothing.
+        for i in range(self.smoothing):
+            res = curvop(res)
+        res[mask] = 0
+        self._u = res
+

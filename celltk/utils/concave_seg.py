@@ -205,6 +205,7 @@ def cellfilter(cell, small_area, large_area, major_minor=2.0):
     else:
         return False
 
+
 class CellCutter(object):
     def __init__(self, bw, img, wlines, small_rad, large_rad, EDGELEN=10, THRES=180):
         DISTLIM_SCALE = 1.5
@@ -221,13 +222,13 @@ class CellCutter(object):
         self.DISTLIM = self.large_rad * DISTLIM_SCALE
         self.coords_set = []
         self.cut_coords = []
+        self.cut_cells = []
 
     def extract_cell_outlines(self):
         self.cell = regionprops(self.bw.astype(np.uint8), self.img)[0]
         self.cell.o_coords = find_oriented_coords(self.bw)
 
     def run(self):
-        self.cut_cells = []
         self.prepare_coords_set()
         if not self.coords_set:
             return
@@ -287,7 +288,7 @@ class CellCutter(object):
             return
         self.coords_set = self.filter_coords_by_dist(coords)
         if not self.coords_set:
-            return        
+            return
         self.coords_set = self.filter_coords_by_step(self.cell.o_coords, self.coords_set)        
 
     def filter_coords_by_dist(self, coords):

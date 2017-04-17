@@ -51,3 +51,4 @@ def watershed_labels(labels, REG=10):
     Does not use intensity information but shape.
     """
     return label_watershed(labels, regmax=REG)
+
