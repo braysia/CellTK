@@ -14,7 +14,6 @@ import ast
 from skimage.segmentation import clear_border
 from utils.filters import gray_fill_holes
 from skimage.morphology import remove_small_objects
-# from skimage.morphology import remove_small_holes
 from utils.filters import label
 from scipy.ndimage.morphology import binary_opening
 
@@ -44,8 +43,8 @@ def main():
     parser.add_argument("-i", "--input", help="images", nargs="*")
     parser.add_argument("-o", "--output", help="output directory",
                         type=str, default='temp')
-    parser.add_argument("-f", "--functions", help="functions", nargs="*")
-    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="))
+    parser.add_argument("-f", "--functions", help="functions", nargs="*", default=None)
+    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="), default={})
     parser.add_argument("-r", "--radius", help="minimum and maximum radius", nargs=2, default=[3, 50])
     parser.add_argument("--open", help="OPENING parameters", nargs=1, default=2)
     args = parser.parse_args()
@@ -53,6 +52,9 @@ def main():
     param = dict(args.param)
     for key, value in param.iteritems():
         param[key] = ast.literal_eval(value)
+
+    if args.functions is None:
+        print help(segment_operation)
 
     for path in args.input:
         img = imread(path)

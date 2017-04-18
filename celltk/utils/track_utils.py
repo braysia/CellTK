@@ -55,3 +55,28 @@ def call_lap(cost, costDie, costBorn):
     t = munkres(costMat)
     topleft = t[0:cost.shape[0], 0:cost.shape[1]]
     return topleft
+
+
+def pick_closer_binarycostmat(binarymat, distmat):
+    '''
+    pick closer cells if there are two similar nucleus within area
+    '''
+    twonuc = np.where(np.sum(binarymat, 1) == 2)[0]
+    for ti in twonuc:
+        di = distmat[ti, :]
+        bi = binarymat[ti, :]
+        binarymat[ti, :] = min(di[bi]) == di
+    return binarymat
+
+
+def pick_closer_cost(binarymat, distmat):
+    '''
+    pick closer cells if there are two similar nucleus within area
+    '''
+    twonuc = np.where(np.sum(binarymat, 1) > 1)[0]
+    for ti in twonuc:
+        di = distmat[ti, :]
+        bi = binarymat[ti, :]
+        binarymat[ti, :] = min(di[bi]) == di
+        # bmat[ti, np.where(min(di[bi]) == di)[0][0]] = True
+    return binarymat

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 import SimpleITK as sitk
-from skimage.measure import regionprops, label
+from postprocess_utils import regionprops
 from filters import label
 import cv2
 from skimage.draw import line
@@ -10,6 +10,8 @@ from mahotas.segmentation import gvoronoi
 from skimage.segmentation import find_boundaries
 from skimage.morphology import thin
 from functools import partial
+from track_utils import calc_massdiff, find_one_to_one_assign
+from scipy.spatial.distance import cdist
 
 
 def cut_neck(template, r0, c0, r1, c1):
@@ -25,6 +27,13 @@ def make_candidates(cl_label, s0, s1, e0, e1):
     cut_label = cut_neck(cl_label, s0, s1, e0, e1)
     cand_label = label(cut_label, connectivity=1)
     cand_rps = regionprops(cand_label)
+    return cand_rps
+
+
+def make_candidates_img(cl_label, s0, s1, e0, e1, img):
+    cut_label = cut_neck(cl_label, s0, s1, e0, e1)
+    cand_label = label(cut_label, connectivity=1)
+    cand_rps = regionprops(cand_label, img)
     return cand_rps
 
 
@@ -92,7 +101,6 @@ def levelset_geo(img, labels, advec=3, propagation=0.75, niter=100):
     ls = gfil.Execute(init_ls, sitk.Cast(simg, sitk.sitkFloat32))
     ls = label(sitk.GetArrayFromImage(ls) > 0)
     return keep_labels(labels, ls)
-
 
 
 def extract_large(labels, AREA=700):
@@ -252,7 +260,6 @@ class CellCutter(object):
             return
         (n1, n2) = candidate.n1, candidate.n2
         self.all_cells = make_candidates(self.bw.copy(), self.coords_set[n1][0][0], self.coords_set[n1][0][1], self.coords_set[n1][1][0], self.coords_set[n1][1][1])
-        cut_store = []
         self.cut_coords.append(self.coords_set[n1])
         for c in self.all_cells:
             if self.filfunc(c):
@@ -319,7 +326,7 @@ class CellCutter(object):
         candidates = []
         for n1, (startpt, endpt) in enumerate(coords_set):
             # cut and get candidate regionprops
-            cand_rps = make_candidates(bw.copy(), startpt[0], startpt[1], endpt[0], endpt[1])
+            cand_rps = make_candidates_img(bw.copy(), startpt[0], startpt[1], endpt[0], endpt[1], self.img)
             if not len(cand_rps) > len(np.unique(label(self.cell.filled_image, connectivity=1))) - 1:
                 continue
             if not all([c.area > np.pi * self.small_rad**2 for c in cand_rps]):
@@ -328,6 +335,7 @@ class CellCutter(object):
             for n2, c in enumerate(cand_rps):
                 if c.minor_axis_length > 1:
                     c.n1, c.n2 = n1, n2
+                    c.cut_coords = (startpt, endpt)
                     c.cutline_len = np.sqrt((startpt[0] - endpt[0])**2 + (startpt[1] - endpt[1])**2)
                     c.line_total = intensity_below_line(self.img, startpt[0], startpt[1], endpt[0], endpt[1]).sum()
                     candidates.append(c)
@@ -392,3 +400,4 @@ def run_concave_cut(img, labels, small_rad, large_rad, EDGELEN=6, THRES=180):
     store = get_cut_coords(img, labels, small_rad, large_rad, EDGELEN=EDGELEN, THRES=THRES)
     labels = label(cut_labels(labels, [i for j in store for i in j]), connectivity=1)
     return labels
+

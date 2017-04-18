@@ -37,7 +37,7 @@ def main():
     parser.add_argument("-o", "--output", help="output directory",
                         type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="+")
-    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="))
+    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="), default={})
     args = parser.parse_args()
     make_dirs(args.output)
     param = dict(args.param)
@@ -49,11 +49,11 @@ def main():
     for path, pathl in zip(args.input[1:], args.labels[1:]):
         img1, labels1 = imread(path), imread(pathl).astype(np.int32)
         labels1 = -labels1
-        for function in args.functions:
+        for fnum, function in enumerate(args.functions):
             func = getattr(track_operation, function)
             if not (labels1 < 0).any():
                 continue
-            labels1 = func(img0, img1, labels0, -labels1, **param)
+            labels0, labels1 = func(img0, img1, labels0, -labels1, **param)
         labels0 = neg2poslabels(labels1)
         img0 = img1
         tiff.imsave(join(args.output, basename(path)), labels0.astype(np.int32))

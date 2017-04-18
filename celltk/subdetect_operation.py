@@ -3,6 +3,7 @@ from utils.concave_seg import levelset_geo_separete
 from utils.concave_seg import run_concave_cut
 from utils.filters import MultiSnakesCombined
 
+
 def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
     """Create a ring around label.
     :param RINGWIDTH: Width of rings
