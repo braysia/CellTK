@@ -70,13 +70,10 @@ def pick_closer_binarycostmat(binarymat, distmat):
 
 
 def pick_closer_cost(binarymat, distmat):
-    '''
-    pick closer cells if there are two similar nucleus within area
-    '''
-    twonuc = np.where(np.sum(binarymat, 1) > 1)[0]
-    for ti in twonuc:
-        di = distmat[ti, :]
-        bi = binarymat[ti, :]
-        binarymat[ti, :] = min(di[bi]) == di
-        # bmat[ti, np.where(min(di[bi]) == di)[0][0]] = True
-    return binarymat
+    distmat = distmat.astype(np.float)
+    bmat = np.zeros(binarymat.shape, np.bool)
+    distmat[-binarymat] = np.Inf
+    true_rows = np.unique(np.where(binarymat)[0])
+    for i in true_rows:
+        bmat[i, np.argmin(distmat[i, :])] = True
+    return bmat
