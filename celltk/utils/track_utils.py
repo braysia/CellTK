@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 from munkres import munkres
+from scipy.spatial.distance import cdist
 
 
 def calc_ratiodiff(a, b):
@@ -77,3 +78,48 @@ def pick_closer_cost(binarymat, distmat):
     for i in true_rows:
         bmat[i, np.argmin(distmat[i, :])] = True
     return bmat
+
+
+def _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES):
+    """called by track_neck_cut only
+    """
+    good_cells = []
+    for cands in store:
+        if not cands or not rps0:
+            continue
+        dist = cdist([i.centroid for i in rps0], [i.centroid for i in cands])
+        massdiff = calc_massdiff(rps0, cands)
+        binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)
+
+        line_int = [i.line_total for i in cands]
+        line_mat = np.tile(line_int, len(rps0)).reshape(len(rps0), len(line_int))
+        binary_cost = pick_closer_cost(binary_cost, line_mat)
+        binary_cost = pick_closer_cost(binary_cost.T, dist.T).T
+        idx1, idx0 = find_one_to_one_assign(binary_cost.copy())
+        if not idx0:
+            continue
+        i0, i1 = idx0[0], idx1[0]
+        cell = cands[i1]
+        cell.previous = rps0[i0]
+        good_cells.append(cell)
+    return good_cells
+
+
+def _update_labels_neck_cut(labels0, labels1, good_cells):
+    """called by track_neck_cut only
+    """
+    labels = -labels1.copy()
+    minint = -np.max(abs(labels))
+    unique_raw_labels = np.unique([cell.raw_label for cell in good_cells])
+    neg_labels = np.zeros(labels.shape, np.int32)
+    for i in unique_raw_labels:
+        minint -= 1
+        neg_labels[labels1 == i] = minint
+        labels[labels1 == i] = 0
+
+    for cell in good_cells:
+        for c0, c1 in cell.coords:
+            neg_labels[c0, c1] = cell.previous.label
+            labels0[labels0 == cell.previous.label] = -cell.previous.label
+    labels = labels + neg_labels
+    return labels0, labels
