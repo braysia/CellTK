@@ -4,7 +4,9 @@ import SimpleITK as sitk
 import numpy as np
 
 
-def gaussian_laplace(img, SIGMA=2.5):
+def gaussian_laplace(img, SIGMA=2.5, NEG=False):
+    if NEG:
+        return -calc_lapgauss(img, SIGMA)
     return calc_lapgauss(img, SIGMA)
 
 

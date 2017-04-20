@@ -103,7 +103,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
     return labels0, labels
 
 
-def track_neck_cut(img0, img1, labels0, labels1, SMALL_RAD=7, LARGE_RAD=20, 
+def track_neck_cut(img0, img1, labels0, labels1, SMALL_RAD=3, LARGE_RAD=10, 
                    DISPLACEMENT=10, MASSTHRES=0.2, EDGELEN=5, THRES_ANGLE=180):
     """
     Adaptive segmentation by using tracking informaiton.

@@ -49,7 +49,7 @@ def calc_shortest_step_coords(coords, co1, co2):
 
 
 def find_oriented_coords(outline):
-    cnt = cv2.findContours(outline.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[0][0]
+    cnt = cv2.findContours(outline.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[1][0]
     cnt = np.flipud(cnt)
     assert cv2.contourArea(cnt, oriented=True) > 0
     return np.fliplr(np.squeeze(cnt))

@@ -3,7 +3,7 @@ python celltk/segment.py -i ~/covertrack/data/testimages/img_0000000* -f example
 """
 
 
-from scipy.ndimage import imread
+# from scipy.ndimage import imread
 import argparse
 import tifffile as tiff
 from os.path import basename, join
@@ -16,6 +16,7 @@ from utils.filters import gray_fill_holes
 from skimage.morphology import remove_small_objects
 from utils.filters import label
 from scipy.ndimage.morphology import binary_opening
+from utils.util import imread
 
 
 def make_dirs(path):
@@ -33,9 +34,25 @@ def clean_labels(labels, rad, OPEN=2):
     labels = clear_border(labels, buffer_size=2)
     labels = remove_small_objects(labels, rad[0]**2 * np.pi, connectivity=4)
     antimask = remove_small_objects(labels, rad[1]**2 * np.pi, connectivity=4)
-    labels[antimask] = False
+    labels[antimask > 0] = False
     labels = label(binary_opening(labels, np.ones((int(OPEN), int(OPEN))), iterations=1))
     return labels
+
+
+def parse_image_files(inputs):
+    if "/" not in inputs:
+        return inputs
+    store = []
+    li = []
+    while inputs:
+        element = inputs.pop(0)
+        if element == "/":
+            store.append(li)
+            li = []
+        else:
+            li.append(element)
+    store.append(li)
+    return zip(*store)
 
 
 def main():
@@ -56,11 +73,14 @@ def main():
     if args.functions is None:
         print help(segment_operation)
 
-    for path in args.input:
+    inputs = parse_image_files(args.input)
+    for path in inputs:
         img = imread(path)
         for function in args.functions:
             func = getattr(segment_operation, function)
             img = func(img, **param)
+        if isinstance(path, list) or isinstance(path, tuple):
+            path = path[0]
         labels = clean_labels(img, args.radius, args.open)
         tiff.imsave(join(args.output, basename(path)), labels.astype(np.float32))
 
