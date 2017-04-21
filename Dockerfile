@@ -16,4 +16,11 @@ RUN conda install matplotlib==1.5.1 \
 
 EXPOSE 8888
 WORKDIR /home
+
+RUN jupyter notebook --generate-config --allow-root \
+    && echo 'c.NotebookApp.allow_root = True' >> /root/.jupyter/jupyter_notebook_config.py \
+    && echo 'c.NotebookApp.ip = "*"' >> /root/.jupyter/jupyter_notebook_config.py \
+    && echo 'c.NotebookApp.port = 8888' >> /root/.jupyter/jupyter_notebook_config.py
+
+
 CMD ["/bin/bash"]
