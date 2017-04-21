@@ -17,6 +17,7 @@ python celltk/apply.py -i data/testimages0/YFP/img* -l output/nuc/img* -o output
 
 python celltk/apply.py -i data/testimages0/YFP/img* -l output/cyto/img* -o output/array.npz
 ```
+_-i_ for images path, _-l_ for labels path, _-o_ for output directory, _-f_ for function name from *operation.py, _-p_ for arguments to the function.
 
 The output can be loaded with LabeledArray class.
 ```
@@ -30,3 +31,10 @@ docker pull braysia/celltk
 docker run -it -v /folder_you_want_to_mount:/home/ braysia/celltk
 ```
 Add "-p 8888:8888" for running jupyter notebook from the docker image.
+
+## Temp
+Two major data types are "img" and "labels".  
+img: np.ndarray[np.float32]  
+labels: np.ndarray[np.int32]
+
+
