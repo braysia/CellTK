@@ -2,6 +2,8 @@ from utils.subdetect_utils import dilate_to_cytoring
 from utils.concave_seg import levelset_geo_separete
 from utils.concave_seg import run_concave_cut
 from utils.filters import MultiSnakesCombined
+from utils.concave_seg import levelset_lap
+from utils.filters import label
 
 
 def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
@@ -58,3 +60,7 @@ def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=
     ms = MultiSnakesCombined(img, labels)
     labels = ms.multi_step(niter=NITER)
     return labels
+
+
+def laplacian_levelset(labels, img, NITER=100, CURVE=3, PROP=-1):
+    return label(levelset_lap(img, labels, NITER, CURVE, PROP))

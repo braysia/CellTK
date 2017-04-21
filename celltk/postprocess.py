@@ -45,7 +45,7 @@ def main():
     parser.add_argument("-l", "--labels", help="labels", nargs="+")
     parser.add_argument("-o", "--output", help="output directory", type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="+")
-    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="))
+    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="), default={})
     args = parser.parse_args()
     make_dirs(args.output)
     param = dict(args.param)

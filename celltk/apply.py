@@ -8,13 +8,11 @@ need to deal with parent id
 from scipy.ndimage import imread
 import argparse
 import tifffile as tiff
-from os.path import basename, join, dirname
+from os.path import basename, join, dirname, abspath
 import numpy as np
 import os
-import subdetect_operation
-import ast
 from utils.postprocess_utils import regionprops # set default parent and next as None
-from LabeledArray.labeledarray.labeledarray import LabeledArray
+from labeledarray import LabeledArray
 from os.path import exists
 
 
@@ -65,7 +63,9 @@ def main():
     # parser.add_argument("-f", "--functions", help="functions", nargs="+")
     # parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="))
     args = parser.parse_args()
-    make_dirs(args.output)
+
+    output = args.output + '.npz' if not args.output.endswith('.npz') else args.output
+    make_dirs(dirname(abspath(output)))
     # param = dict(args.param)
     # for key, value in param.iteritems():
     #     param[key] = ast.literal_eval(value)
@@ -78,11 +78,10 @@ def main():
         store.append(regionprops(labels, img))
 
     larr = make_labeledarray(store, obj_name, ch_name)
-    args.output = args.output + '.npz' if not args.output.endswith('.npz') else args.output
-    if exists(args.output):
-        ex_larr = LabeledArray().load(args.output)
+    if exists(output):
+        ex_larr = LabeledArray().load(output)
         larr = larr.vstack(ex_larr)
-    larr.save(args.output)
+    larr.save(output)
 
 
 if __name__ == "__main__":

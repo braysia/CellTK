@@ -67,16 +67,16 @@ def keep_labels(ref_labels, conv_labels):
     return labels
 
 
-def levelset_lap(img, labels, niter=100):
+def levelset_lap(img, labels, NITER=100, CURVE=3, PROP=-1):
     simg = sitk.GetImageFromArray(img, sitk.sitkFloat32)
     seg = sitk.GetImageFromArray(labels)
     init_ls = sitk.SignedMaurerDistanceMap(seg, insideIsPositive=True, useImageSpacing=True)
 
     lsFilter = sitk.LaplacianSegmentationLevelSetImageFilter()
     lsFilter.SetMaximumRMSError(0.02)
-    lsFilter.SetNumberOfIterations(niter)
-    lsFilter.SetCurvatureScaling(3)
-    lsFilter.SetPropagationScaling(-1)
+    lsFilter.SetNumberOfIterations(NITER)
+    lsFilter.SetCurvatureScaling(CURVE)
+    lsFilter.SetPropagationScaling(PROP)
     lsFilter.ReverseExpansionDirectionOn()
     ls = lsFilter.Execute(init_ls, sitk.Cast(simg, sitk.sitkFloat32))
     ls = label(sitk.GetArrayFromImage(ls) > 0)

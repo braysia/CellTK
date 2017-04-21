@@ -25,8 +25,11 @@ class TracesController(object):
         return [cell for cell in cells if cell.frame > 0]
 
     def pairwise_dist(self):
-        dist = cdist([i.centroid for i in self.disappeared()], [i.centroid for i in self.appeared()])
-        return dist
+        if self.disappeared() and self.appeared():
+            dist = cdist([i.centroid for i in self.disappeared()], [i.centroid for i in self.appeared()])
+            return dist
+        else:
+            return np.array([])
 
     def pairwise_frame(self):
         '''disappeared in row, appeared in col'''
