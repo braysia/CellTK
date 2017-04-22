@@ -13,6 +13,7 @@ import numpy as np
 import os
 import preprocess_operation
 import ast
+from utils.global_holder import holder
 
 
 def make_dirs(path):
@@ -28,14 +29,16 @@ def main():
     parser.add_argument("-i", "--input", help="images", nargs="*")
     parser.add_argument("-o", "--output", help="output directory", type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="*")
-    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="))
+    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="), default={})
     args = parser.parse_args()
     make_dirs(args.output)
     param = dict(args.param)
     for key, value in param.iteritems():
         param[key] = ast.literal_eval(value)
 
-    for path in args.input:
+    holder.args = args
+
+    for holder.frame, path in enumerate(args.input):
         img = imread(path)
         for function in args.functions:
             func = getattr(preprocess_operation, function)

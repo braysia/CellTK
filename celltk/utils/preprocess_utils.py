@@ -103,6 +103,7 @@ def wavelet_subtraction_hazen(img, ITER=5, THRES=100, WLEVEL=6):
     background = remove_odd_addback(img, f)
     return background
 
+
 def resize_img(himg, origshape):
     """resize works for float range from 0 to 1.
     """

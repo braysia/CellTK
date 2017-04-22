@@ -7,6 +7,9 @@ from utils.preprocess_utils import convert_positive, estimate_background_prc
 from utils.preprocess_utils import curvature_anisotropic_smooth, resize_img
 from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen
 from utils.filters import adaptive_thresh
+from utils.global_holder import holder
+from utils.cp_functions import align_cross_correlation
+from scipy.ndimage import imread
 
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
@@ -23,13 +26,13 @@ def curvature_anisotropic_smooth(img, NUMITER=10):
     return sitk.GetArrayFromImage(sres)
 
 
-def smooth_curvature_anisotropic(img, holder, NUMITER=10):
+def smooth_curvature_anisotropic(img, NUMITER=10):
     """anisotropic diffusion on a scalar using the modified curvature diffusion equation (MCDE).
     """
     return curvature_anisotropic_smooth(img, NUMITER)
 
 
-def background_subtraction_wavelet_hazen(img, holder, THRES=100, ITER=5, WLEVEL=6, OFFSET=50):
+def background_subtraction_wavelet_hazen(img, THRES=100, ITER=5, WLEVEL=6, OFFSET=50):
     """Wavelet background subtraction.
     """
     back = wavelet_subtraction_hazen(img, ITER=ITER, THRES=THRES, WLEVEL=WLEVEL)
@@ -37,7 +40,7 @@ def background_subtraction_wavelet_hazen(img, holder, THRES=100, ITER=5, WLEVEL=
     return convert_positive(img, OFFSET)
 
 
-def n4_illum_correction(img, holder, RATIO=1.5, FILTERINGSIZE=50):
+def n4_illum_correction(img, RATIO=1.5, FILTERINGSIZE=50):
     """
     Implementation of the N4 bias field correction algorithm.
     Takes some calculation time. It first calculates the background using adaptive_thesh.
@@ -47,7 +50,7 @@ def n4_illum_correction(img, holder, RATIO=1.5, FILTERINGSIZE=50):
     return img
 
 
-def n4_illum_correction_downsample(img, holder, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OFFSET=10):
+def n4_illum_correction_downsample(img, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OFFSET=10):
     """Faster but more insensitive to local illum bias.
     """
     fil = sitk.ShrinkImageFilter()
@@ -59,6 +62,26 @@ def n4_illum_correction_downsample(img, holder, DOWN=2, RATIO=1.05, FILTERINGSIZ
     bias = resize_img(himg, img.shape)
     img = img - bias
     return convert_positive(img, OFFSET)
+
+
+def align(img):
+    if not hasattr(holder, "align"):
+        store = [(0, 0)]
+        img0 = imread(holder.args.input[0])
+        for path in holder.args.input[1:]:
+            img1 = imread(path)
+            store.append(align_cross_correlation(img0, img1))
+        shapes = img0.shape
+        max_w = max(i[0] for i in store)
+        start_w = [max_w - i[0] for i in store]
+        size_w = min([shapes[1] + i[0] for i in store]) - max_w
+        max_h = max(i[1] for i in store)
+        start_h = [max_h - i[1] for i in store]
+        size_h = min([shapes[0] + i[1] for i in store]) - max_h
+        holder.align = [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
+
+    jt = holder.align[holder.frame]
+    return img[jt[0]:jt[1], jt[2]:jt[3]]
 
 
 # def flatfield_with_inputs(img, ff_paths=['img00.tif', 'img01.tif']):
