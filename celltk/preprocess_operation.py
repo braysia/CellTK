@@ -8,7 +8,7 @@ from utils.preprocess_utils import curvature_anisotropic_smooth, resize_img
 from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen
 from utils.filters import adaptive_thresh
 from utils.global_holder import holder
-from utils.cp_functions import align_cross_correlation
+from utils.cp_functions import align_cross_correlation, align_mutual_information
 from scipy.ndimage import imread
 
 
@@ -64,14 +64,39 @@ def n4_illum_correction_downsample(img, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OF
     return convert_positive(img, OFFSET)
 
 
-def align(img):
+def align(img, DOWN=2, CROP=0.05):
+    """
+    DOWN (int): The ratio of downsampling. When set to 2, image is reduced to 50% size.
+                If calculation is slow, set it to 3-4.
+    CROP (float): crop images beforehand. When set to 0.05, 5% of each edges are cropped.
+    """
+    def downsample(img, DOWN=DOWN):
+        fil = sitk.ShrinkImageFilter()
+        return sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(img), [DOWN, DOWN]))
+
     if not hasattr(holder, "align"):
-        store = [(0, 0)]
-        img0 = imread(holder.args.input[0])
-        for path in holder.args.input[1:]:
-            img1 = imread(path)
-            store.append(align_cross_correlation(img0, img1))
+        if isinstance(holder.args.input[0], list) or isinstance(holder.args.input[0], tuple):
+            inputs = [i[0] for i in holder.args.input]
+        else:
+            inputs = holder.args.input
+
+        img0 = imread(inputs[0])
         shapes = img0.shape
+
+        (ch, cw) = [int(CROP * i) for i in img0.shape]
+        ch = None if ch == 0 else ch
+        cw = None if cw == 0 else cw
+
+        img0 = img0[ch:-ch, cw:-cw]
+        img0 = downsample(img0, DOWN)
+        mask = np.ones(img0.shape, np.bool)
+        store = [(0, 0)]
+        for path in inputs[1:]:
+            img1 = imread(path)[ch:-ch, cw:-cw]
+            img1 = downsample(img1, DOWN)
+            j0, j1 = align_mutual_information(img0, img1, mask, mask)
+            store.append((j0 * DOWN, j1 * DOWN))
+
         max_w = max(i[0] for i in store)
         start_w = [max_w - i[0] for i in store]
         size_w = min([shapes[1] + i[0] for i in store]) - max_w
@@ -81,7 +106,10 @@ def align(img):
         holder.align = [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
 
     jt = holder.align[holder.frame]
-    return img[jt[0]:jt[1], jt[2]:jt[3]]
+    if img.ndim == 2:
+        return img[jt[0]:jt[1], jt[2]:jt[3]]
+    if img.ndim == 3:
+        return img[jt[0]:jt[1], jt[2]:jt[3], :]
 
 
 # def flatfield_with_inputs(img, ff_paths=['img00.tif', 'img01.tif']):

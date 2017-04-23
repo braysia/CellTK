@@ -19,7 +19,7 @@ python celltk/apply.py -i data/testimages0/YFP/img* -l output/cyto/img* -o outpu
 ```
 _-i_ for images path, _-l_ for labels path, _-o_ for output directory, _-f_ for function name from *operation.py, _-p_ for arguments to the function.
 
-The output can be loaded with LabeledArray class.
+The output can be loaded with LabeledArray class. e.g.
 ```
 python -c "from celltk.labeledarray import LabeledArray;arr = LabeledArray().load('output/array.npz');print arr.labels;print arr['CFP', 'nuc', 'x']"
 ```
