@@ -14,6 +14,7 @@ import SimpleITK as sitk
 from morphsnakes import MorphACWE, curvop
 from mahotas.segmentation import gvoronoi
 from skimage.morphology import thin
+import pandas as pd
 
 
 def label_watershed(labels, regmax):
@@ -213,3 +214,13 @@ class MultiSnakesCombined(MultiSnakes):
         res[mask] = 0
         self._u = res
 
+
+def interpolate_nan(arr):
+    """Approximate a linear interpolation of array with NaNs.
+    """
+    arr[arr < 0] = np.nan
+    h_interp = pd.DataFrame(arr).interpolate(axis=0)
+    w_interp = pd.DataFrame(arr).interpolate(axis=1)
+    interpolated = np.nanmean(np.dstack((h_interp, w_interp)), axis=2)
+    interpolated[np.isnan(interpolated)] = 0
+    return interpolated

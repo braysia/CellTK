@@ -16,6 +16,7 @@ import ast
 from utils.global_holder import holder
 from utils.file_io import make_dirs
 from utils.util import imread
+from utils.parser import ParamParser
 
 
 def parse_image_files(inputs):
@@ -47,20 +48,20 @@ def main():
     parser.add_argument("-i", "--input", help="images", nargs="*")
     parser.add_argument("-o", "--output", help="output directory", type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="*")
-    parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="), default={})
+    parser.add_argument("-p", "--param", nargs="*", help="parameters", default={})
     args = parser.parse_args()
     make_dirs(args.output)
-    param = dict(args.param)
-    for key, value in param.iteritems():
-        param[key] = ast.literal_eval(value)
 
+    params = ParamParser(args.param).run()
     args.input = parse_image_files(args.input)
     holder.args = args
+
     for holder.frame, path in enumerate(args.input):
         img = imread(path)
-        for function in args.functions:
+        for function, param in zip(args.functions, params):
             func = getattr(preprocess_operation, function)
             img = func(img, **param)
+        print holder.frame
         imsave(img, args.output, path)
 
 

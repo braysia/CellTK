@@ -4,12 +4,14 @@ import SimpleITK as sitk
 import numpy as np
 from utils.preprocess_utils import homogenize_intensity_n4
 from utils.preprocess_utils import convert_positive, estimate_background_prc
-from utils.preprocess_utils import curvature_anisotropic_smooth, resize_img
+from utils.preprocess_utils import resize_img
 from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen
 from utils.filters import adaptive_thresh
 from utils.global_holder import holder
 from utils.cp_functions import align_cross_correlation, align_mutual_information
 from scipy.ndimage import imread
+from glob import glob
+from utils.filters import interpolate_nan
 
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
@@ -45,7 +47,7 @@ def n4_illum_correction(img, RATIO=1.5, FILTERINGSIZE=50):
     Implementation of the N4 bias field correction algorithm.
     Takes some calculation time. It first calculates the background using adaptive_thesh.
     """
-    bw = adaptive_thresh(img, RATIO=RATIO, FILTERINGSIZE=FILTERINGSIZE)
+    bw = adaptive_thresh(img, R=RATIO, FILTERINGSIZE=FILTERINGSIZE)
     img = homogenize_intensity_n4(img, -bw)
     return img
 
@@ -55,7 +57,7 @@ def n4_illum_correction_downsample(img, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OF
     """
     fil = sitk.ShrinkImageFilter()
     cc = sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(img), [DOWN, DOWN]))
-    bw = adaptive_thresh(cc, RATIO=RATIO, FILTERINGSIZE=FILTERINGSIZE/DOWN)
+    bw = adaptive_thresh(cc, R=RATIO, FILTERINGSIZE=FILTERINGSIZE/DOWN)
     himg = homogenize_intensity_n4(cc, -bw)
     himg = cc - himg
     # himg[himg < 0] = 0
@@ -112,15 +114,25 @@ def align(img, DOWN=2, CROP=0.05):
         return img[jt[0]:jt[1], jt[2]:jt[3], :]
 
 
-# def flatfield_with_inputs(img, ff_paths=['img00.tif', 'img01.tif']):
-#     """
-#     Examples:
-#         preprocess_args = (dict(name='flatfield_with_inputs', ch="TRITC", ff_paths=['Exp2_w1TRITC_s1_t1.TIF', 'Exp2_w1TRITC_s1_t1.TIF']), )
-#     """
-#     ff_store = []
-#     for path in ff_paths:
-#         ff_store.append(imread(path))
-#         ff = np.median(np.dstack(ff_store), axis=2)
-#     img = img - ff
-#     img[img < 0] = 0
-#     return img
+def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif']):
+    """
+    ff_paths (str or List(str)): image path for flat fielding references.
+                                 It can be single, multiple or path with wildcards.
+
+        e.g.    ff_paths = "FF/img_000000000_YFP*"
+                ff_paths = ["FF/img_01.tif", "FF/img_02.tif"]
+    """
+    store = []
+    if isinstance(ff_paths, str):
+        ff_paths = [ff_paths, ]
+    for i in ff_paths:
+        for ii in glob(i):
+            store.append(ii)
+    ff_store = []
+    for path in store:
+        ff_store.append(imread(path))
+    ff = np.median(np.dstack(ff_store), axis=2)
+    img = img - ff
+    img[img < 0] = np.nan
+    img = interpolate_nan(img)
+    return img
