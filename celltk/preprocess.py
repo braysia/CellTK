@@ -61,7 +61,6 @@ def main():
         for function, param in zip(args.functions, params):
             func = getattr(preprocess_operation, function)
             img = func(img, **param)
-        print holder.frame
         imsave(img, args.output, path)
 
 
