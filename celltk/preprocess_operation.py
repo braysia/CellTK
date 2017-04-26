@@ -116,6 +116,9 @@ def align(img, DOWN=2, CROP=0.05):
 
 def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif']):
     """
+    Use empty images for background subtraction and illumination bias correction.
+    Given multiple reference images, it will calculate median profile and use it for subtraction.
+
     ff_paths (str or List(str)): image path for flat fielding references.
                                  It can be single, multiple or path with wildcards.
 
@@ -135,4 +138,17 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif']):
     img = img - ff
     img[img < 0] = np.nan
     img = interpolate_nan(img)
+    return img
+
+
+def histogram_match(img, BINS=1000, QUANT=100, THRES=False):
+    """
+    If an optical system is not stable and shows global intensity changes over time,
+    use this method to correct for it. Typically use for nuclear marker, where
+    intensity and its patterns should be stable over time.
+    """
+    if holder.frame == 0:
+        holder.first_img = img
+    else:
+        img = histogram_matching(img, holder.first_img, BINS, QUANT, THRES)
     return img

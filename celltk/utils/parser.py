@@ -33,9 +33,8 @@ class ParamParser(object):
         pss = []
         for p in ps:
             pair = p.split("=")
-            pair[1] = re.sub('([a-zA-Z/._][a-zA-Z0-9/._\*]*)', "'\g<1>'", pair[1])
+            pair[1] = re.sub('([a-zA-Z/_][a-zA-Z0-9/._\*]*)', "'\g<1>'", pair[1])
             pss.append(pair)
-        print pss
         return pss
 
     def split_params(self, inputs):

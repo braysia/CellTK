@@ -57,7 +57,10 @@ def concave_cut(labels, img, SMALL_RAD=7, LARGE_RAD=14, EDGELEN=6, THRES=180):
 
 
 def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=1):
-    ms = MultiSnakesCombined(img, labels)
+    """
+    Higher lambda2 relative to lambda1 gives more outward propagation.
+    """
+    ms = MultiSnakesCombined(img, labels, smoothing=SMOOTHING, lambda1=lambda1, lambda2=lambda2)
     labels = ms.multi_step(niter=NITER)
     return labels
 

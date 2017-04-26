@@ -16,6 +16,7 @@ from utils.track_utils import call_lap, pick_closer_cost
 from utils.filters import labels2outlines
 from utils.concave_seg import wshed_raw, CellCutter
 from utils.track_utils import _find_best_neck_cut, _update_labels_neck_cut
+from utils.global_holder import holder
 
 
 def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
@@ -30,10 +31,11 @@ def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.
     for i0, i1 in zip(idx0, idx1):
         labels[labels1 == rps1[i1].label] = rps0[i0].label
         labels0[labels0 == rps0[i0].label] = -rps0[i0].label
+    print DISPLACEMENT
     return labels0, labels
 
 
-def nn_closer(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
+def nn_closer(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.25):
     labels = -labels1.copy()
     rps0 = regionprops(labels0, img0)
     rps1 = regionprops(labels1, img1)
@@ -52,7 +54,7 @@ def nn_closer(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
     return labels0, labels
 
 
-def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
+def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
     '''Linear assignment problem for mammalian cells.
     Cost matrix is simply the distance.
     costDie and costBorn are variables changing over frame. Update it through holder.
@@ -65,6 +67,9 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
     labels = -labels1.copy()
     rps0 = regionprops(labels0, img0)
     rps1 = regionprops(labels1, img1)
+
+    if not rps0 or not rps1:
+        return labels0, labels
 
     dist = cdist([i.centroid for i in rps0], [i.centroid for i in rps1])
     massdiff = calc_massdiff(rps0, rps1)
@@ -85,8 +90,8 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
     binary_cost = call_lap(cost, holder.cost_die, holder.cost_born)
     # The first assignment of np.Inf is to reduce calculation of linear assignment.
     # This part will make sure that cells outside of these range do not get connected.
-    binary_cost[abs(massdiff) > MASSTHRES] = False
-    binary_cost[dist > DISPLACEMENT] = False
+    binary_cost[(np.abs(massdiff) > MASSTHRES)] = False
+    binary_cost[(dist > DISPLACEMENT)] = False
 
     gp, gc = np.where(binary_cost)
     idx0, idx1 = list(gp), list(gc)
@@ -103,20 +108,31 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
     return labels0, labels
 
 
-def track_neck_cut(img0, img1, labels0, labels1, SMALL_RAD=3, LARGE_RAD=10, 
-                   DISPLACEMENT=10, MASSTHRES=0.2, EDGELEN=5, THRES_ANGLE=180):
+def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2, EDGELEN=5, THRES_ANGLE=180):
     """
     Adaptive segmentation by using tracking informaiton.
     Separate two objects by making a cut at the deflection. For each points on the outline,
     it will make a triangle separated by EDGELEN and calculates the angle facing inside of concave.
 
+    The majority of cells need to be tracked before the this method to calculate LARGE_RAD and SMALL_RAD.
+
     EDGELEN (int):      A length of edges of triangle on the nuclear perimeter.
     THRES_ANGLE (int):  Define the neck points if a triangle has more than this angle.
     STEPLIM (int):      points of neck needs to be separated by at least STEPLIM in parimeters.
     """
-    labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
-    labels1 = -labels.copy()
+    # labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
+    # labels1 = -labels.copy()
     labels = -labels1.copy()
+
+    if not hasattr(holder, "SMALL_RAD") and not hasattr(holder, "LARGE_RAD"):
+        tracked_area = [i.area for i in regionprops(labels)]
+        LARGE_RAD = np.sqrt(max(tracked_area)/np.pi)
+        SMALL_RAD = np.sqrt(np.percentile(tracked_area, 5)/np.pi)
+        holder.LARGE_RAD = LARGE_RAD
+        holder.SMALL_RAD = SMALL_RAD
+    else:
+        SMALL_RAD = holder.SMALL_RAD
+        LARGE_RAD = holder.LARGE_RAD
 
     rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)

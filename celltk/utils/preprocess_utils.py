@@ -17,13 +17,13 @@ def adaptive_thresh(img, RATIO=3.0, FILTERINGSIZE=50):
     return bw
 
 
-def histogram_matching(img, previmg, BINS=10000, QUANT=100):
+def histogram_matching(img, previmg, BINS=500, QUANT=2, THRES=False):
     simg = sitk.GetImageFromArray(img)
     spimg = sitk.GetImageFromArray(previmg)
     fil = sitk.HistogramMatchingImageFilter()
     fil.SetNumberOfHistogramLevels(BINS)
     fil.SetNumberOfMatchPoints(QUANT)
-    fil.SetThresholdAtMeanIntensity(False)
+    fil.SetThresholdAtMeanIntensity(THRES)
     filimg = fil.Execute(simg, spimg)
     return sitk.GetArrayFromImage(filimg)
 
