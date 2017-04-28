@@ -17,11 +17,13 @@ from utils.global_holder import holder
 
 
 def neg2poslabels(labels):
-    maxint = labels.max()
+    if not hasattr(holder, 'max'):
+        holder.max = labels.max()
+    holder.max = max(holder.max, labels.max())
     negatives = np.unique(labels[labels < 0])
     for i in negatives:
-        maxint += 1
-        labels[labels == i] = maxint
+        holder.max += 1
+        labels[labels == i] = holder.max
     return labels
 
 
@@ -52,7 +54,6 @@ def main():
                 continue
             labels0, labels1 = func(img0, img1, labels0, -labels1, **param)
 
-        print holder.frame, len(np.unique(labels1[labels1>0]))
         labels0 = neg2poslabels(labels1)
         img0 = img1
         tiff.imsave(join(args.output, basename(path)), labels0.astype(np.int16))
