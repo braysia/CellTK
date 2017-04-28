@@ -5,7 +5,7 @@ from skimage.filters import threshold_otsu
 from utils.filters import label_watershed
 from utils.binary_ops import grey_dilation
 import numpy as np
-from scipy.ndimage import gaussian_laplace, binary_dilation
+from scipy.ndimage import gaussian_laplace, binary_dilation, binary_opening, binary_closing
 
 
 def constant_thres(img, THRES=2000, NEG=False):
@@ -30,21 +30,19 @@ def global_otsu(img):
     return label(img > global_thresh)
 
 
-def adaptive_thres(img, FIL1=10, FIL2=100, R1=1, R2=1):
+def adaptive_thres(img, FIL1=10, FIL2=100, R1=100, R2=100):
     """adaptive thresholding for picking objects with different brightness.
-    FIL2 and R2 for removing background.
     """
-    bw = adaptive_thresh(img, FIL1)
-    foreground = adaptive_thresh(img, FIL2)
-    bw[-foreground] = 0
+    bw = adaptive_thresh(img, R=R1, FILTERINGSIZE=FIL1)
     return label(bw)
 
 
-def adaptive_thres_two(img, FIL1=4, FIL2=100, R1=1, R2=1):
-    """need img.shape==(n, m, 2)
+def adaptive_thres_two(img, FIL1=10, FIL2=100, R1=100, R2=100):
+    """adaptive thresholding for picking objects with different brightness.
+    FIL2 and R2 for removing background.
     """
-    bw = adaptive_thresh(img[:, :, 0], R1, FIL1)
-    foreground = adaptive_thresh(img[:, :, 1], FIL2)
+    bw = adaptive_thresh(img, R=R1, FILTERINGSIZE=FIL1)
+    foreground = adaptive_thresh(img, R=R2, FILTERINGSIZE=FIL2)
     bw[-foreground] = 0
     return label(bw)
 
