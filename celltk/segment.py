@@ -63,6 +63,7 @@ def main():
     make_dirs(args.output)
 
     params = ParamParser(args.param).run()
+    args.radius = [float(i) for i in args.radius]
 
     if args.functions is None:
         print help(segment_operation)

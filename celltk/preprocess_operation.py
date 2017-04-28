@@ -20,18 +20,12 @@ def gaussian_laplace(img, SIGMA=2.5, NEG=False):
     return calc_lapgauss(img, SIGMA)
 
 
-def curvature_anisotropic_smooth(img, NUMITER=10):
+def curvature_anisotropic_smooth(img, NITER=10):
     fil = sitk.CurvatureAnisotropicDiffusionImageFilter()
-    fil.SetNumberOfIterations(NUMITER)
+    fil.SetNumberOfIterations(NITER)
     simg = sitk.GetImageFromArray(img.astype(np.float32))
     sres = fil.Execute(simg)
     return sitk.GetArrayFromImage(sres)
-
-
-def smooth_curvature_anisotropic(img, NUMITER=10):
-    """anisotropic diffusion on a scalar using the modified curvature diffusion equation (MCDE).
-    """
-    return curvature_anisotropic_smooth(img, NUMITER)
 
 
 def background_subtraction_wavelet_hazen(img, THRES=100, ITER=5, WLEVEL=6, OFFSET=50):

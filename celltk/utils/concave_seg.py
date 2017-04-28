@@ -361,7 +361,7 @@ def cut_labels(labels, coords_set):
     return labels
 
 
-def levelset_geo_separete(img, labels, niter=10, prop=1):
+def levelset_geo_separete(img, labels, niter=10, prop=-1, advec=-0.5, curve=-0.5):
     seg = sitk.GetImageFromArray((labels > 0).astype(np.uint8))
     init_ls = sitk.SignedMaurerDistanceMap(seg, insideIsPositive=True, useImageSpacing=True)
 
@@ -373,10 +373,10 @@ def levelset_geo_separete(img, labels, niter=10, prop=1):
     lsFilter = sitk.GeodesicActiveContourLevelSetImageFilter()
     lsFilter.SetMaximumRMSError(0.02)
     lsFilter.SetNumberOfIterations(niter)
-    lsFilter.SetAdvectionScaling(1)
-    lsFilter.SetCurvatureScaling(1)
+    lsFilter.SetAdvectionScaling(advec)
+    lsFilter.SetCurvatureScaling(curve)
     lsFilter.SetPropagationScaling(prop)
-    lsFilter.ReverseExpansionDirectionOn()
+    # lsFilter.ReverseExpansionDirectionOn()
 
     ls = lsFilter.Execute(init_ls, sitk.Cast(img_T1, sitk.sitkFloat32))
     return label(sitk.GetArrayFromImage(ls) > 0, connectivity=1)

@@ -1,5 +1,6 @@
 import re
 import ast
+import __builtin__
 
 
 class ParamParser(object):
@@ -20,7 +21,7 @@ class ParamParser(object):
             for key, value in dic.iteritems():
                 dic[key] = ast.literal_eval(value)
         return dict_list
-        
+
     def iter_combine_list(self, params):
         store = []
         for param in params:
@@ -33,7 +34,8 @@ class ParamParser(object):
         pss = []
         for p in ps:
             pair = p.split("=")
-            pair[1] = re.sub('([a-zA-Z/_][a-zA-Z0-9/._\*]*)', "'\g<1>'", pair[1])
+            if not pair[1] in dir(__builtin__):
+                pair[1] = re.sub('([a-zA-Z/_][a-zA-Z0-9/._\*]*)', "'\g<1>'", pair[1])
             pss.append(pair)
         return pss
 

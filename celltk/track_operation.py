@@ -17,6 +17,9 @@ from utils.filters import labels2outlines
 from utils.concave_seg import wshed_raw, CellCutter
 from utils.track_utils import _find_best_neck_cut, _update_labels_neck_cut
 from utils.global_holder import holder
+from scipy.ndimage import gaussian_laplace, binary_dilation
+from utils.binary_ops import grey_dilation
+from subdetect_operation import propagate_multisnakes
 
 
 def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
@@ -108,7 +111,8 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
     return labels0, labels
 
 
-def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2, EDGELEN=5, THRES_ANGLE=180):
+def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
+                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False):
     """
     Adaptive segmentation by using tracking informaiton.
     Separate two objects by making a cut at the deflection. For each points on the outline,
@@ -119,6 +123,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     EDGELEN (int):      A length of edges of triangle on the nuclear perimeter.
     THRES_ANGLE (int):  Define the neck points if a triangle has more than this angle.
     STEPLIM (int):      points of neck needs to be separated by at least STEPLIM in parimeters.
+    WSLIMIT (bool):     Limit search points to ones overlapped with watershed transformed images. Set it True if calculation is slow.
     """
     # labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
     # labels1 = -labels.copy()
@@ -137,7 +142,11 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)
 
-    wlines = wshed_raw(labels1 > 0, img1)
+    if WSLIMIT:
+        wlines = wshed_raw(labels1 > 0, img1)
+    else:
+        wlines = np.ones(labels1.shape, np.bool)
+
     store = []
     coords_store = []
     for label_id in unique_labels:
@@ -182,3 +191,4 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
         labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
     labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
     return labels0, labels
+

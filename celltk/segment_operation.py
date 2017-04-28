@@ -1,7 +1,11 @@
+from __future__ import division
 from skimage.measure import label
 from utils.filters import adaptive_thresh
 from skimage.filters import threshold_otsu
 from utils.filters import label_watershed
+from utils.binary_ops import grey_dilation
+import numpy as np
+from scipy.ndimage import gaussian_laplace, binary_dilation
 
 
 def constant_thres(img, THRES=2000, NEG=False):
@@ -61,3 +65,18 @@ def watershed_labels(labels, REG=10):
     """
     return label_watershed(labels, regmax=REG)
 
+
+def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, num_sigma=10):
+    sigma_list = np.linspace(min_sigma, max_sigma, num_sigma)
+    gl_images = [-gaussian_laplace(img, s) * s ** 2 for s in sigma_list]
+    image_cube = np.dstack(gl_images)
+    max_image = np.max(image_cube, axis=2)
+    coords = grey_dilation(max_image, separation=separation, percentile=percentile)
+
+    def mark_pos(im, coords):
+        temp = np.zeros(im.shape)
+        for c0, c1 in coords:
+            temp[c0, c1] = 1
+        return temp
+    bw = mark_pos(img, coords)
+    return label(binary_dilation(bw, np.ones((3, 3))))
