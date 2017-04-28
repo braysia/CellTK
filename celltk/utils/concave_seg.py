@@ -233,7 +233,6 @@ class CellCutter(object):
         self.cut_cells = []
 
     def extract_cell_outlines(self):
-        self.cell = regionprops(self.bw.astype(np.uint8), self.img)[0]
         self.cell.o_coords = find_oriented_coords(self.bw)
 
     def run(self):
@@ -287,6 +286,10 @@ class CellCutter(object):
         self.coords_set = store
 
     def prepare_coords_set(self):
+        self.cell = regionprops(self.bw.astype(np.uint8), self.img)[0]
+        if 1 in self.cell.image.shape:
+            self.coords_set = []
+            return
         self.extract_cell_outlines()
         if not hasattr(self.cell, 'o_coords'):
             return
