@@ -1,11 +1,13 @@
 from skimage.measure._regionprops import _RegionProperties
 import numpy as np
 import scipy.ndimage as ndi
+from global_holder import holder
+
 
 
 class _RegionProperties2(_RegionProperties):
     parent = None
-    next = None
+    nxt = None
 
     @property
     def total_intensity(self):
@@ -59,3 +61,15 @@ def regionprops(label_image, intensity_image=None, cache=True):
         regions.append(props)
 
     return regions
+
+
+class Cell(object):
+    def __init__(self, regionprop):
+        for p in dir(regionprop):
+            if "__" in p:
+                continue
+            ret = getattr(regionprop, p)
+            if not isinstance(ret, dict) and not isinstance(ret, tuple) and not isinstance(ret, np.ndarray):
+                setattr(self, p, ret)
+        self.coords = regionprop.coords
+        self.abs_id = holder.count()

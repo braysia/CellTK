@@ -34,7 +34,7 @@ def gap_closing(cells, DISPLACEMENT=100, MASSTHRES=0.15, maxgap=4):
         app_cells = trhandler.appeared()
         for disi, appi in zip(disapp_idx, app_idx):
             dis_cell, app_cell = dis_cells[disi], app_cells[appi]
-            dis_cell.next = app_cell
+            dis_cell.nxt = app_cell
 
             # You can simply reconstruct the trace, but here to reduce the calculation,
             # connect them explicitly.
@@ -43,3 +43,24 @@ def gap_closing(cells, DISPLACEMENT=100, MASSTHRES=0.15, maxgap=4):
             dis_trace.extend(trhandler.traces.pop(trhandler.traces.index(app_trace)))
     traces = label_traces(trhandler.traces)
     return convert_traces_to_storage(traces)
+
+
+def cut_short_traces(cells, minframe=4):
+    '''
+
+    '''
+    # if holder.num_frame <= minframe:
+    #     # FIXME: change this to logging?
+    #     print "too few frames available to cut short traces"
+    #     return traces
+
+    traces = construct_traces_based_on_next(cells)
+
+    ''' Calculate the largest frame differences so it will go well with gap closing'''
+    store = []
+    for trace in traces:
+        frames = [i.frame for i in trace]
+        if max(frames) - min(frames) >= minframe:
+            print max(frames) - min(frames)
+            store.append(trace)
+    return convert_traces_to_storage(store)

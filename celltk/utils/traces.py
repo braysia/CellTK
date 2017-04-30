@@ -55,7 +55,7 @@ def assign_next_and_abs_id_to_storage(storage):
         for prev_cell in prev_cells:
             for curr_cell in curr_cells:
                 if prev_cell.label == curr_cell.label:
-                    prev_cell.next = curr_cell
+                    prev_cell.nxt = curr_cell
     storage = [i for j in storage for i in j]
     # set abs_id from 1 to max
     [setattr(si, 'abs_id', i+1) for i, si in enumerate(storage)]
@@ -66,17 +66,16 @@ def construct_traces_based_on_next(storage):
     '''
     Convert storage to traces.
     traces is a list of lists containing cells with same label_id.
-    If cell1.next = cell2 and cell2.next = cell3, cell4.next = cell5,
+    If cell1.nxt = cell2 and cell2.nxt = cell3, cell4.nxt = cell5,
     then traces = [[cell1, cell2, cell3], [cell4, cell5]].
     storage has to be sorted based on frame.
     '''
     traces = []
     for cell in storage:
         cells = [cell]
-        while cell.next is not None:
-            cell = cell.next
-            cells.append(cell)
-            storage.pop(storage.index(cell))
+        while cell.nxt is not None:
+            cell = cell.nxt
+            cells.append(storage.pop(storage.index(cell)))
         traces.append(cells)
     return traces
 
