@@ -49,10 +49,9 @@ def cut_short_traces(cells, minframe=4):
     '''
 
     '''
-    # if holder.num_frame <= minframe:
-    #     # FIXME: change this to logging?
-    #     print "too few frames available to cut short traces"
-    #     return traces
+    if max([i.frame for i in cells]) < minframe:
+        print "minframe set to the maximum"
+        minframe = max([i.frame for i in cells])
 
     traces = construct_traces_based_on_next(cells)
 
@@ -61,6 +60,5 @@ def cut_short_traces(cells, minframe=4):
     for trace in traces:
         frames = [i.frame for i in trace]
         if max(frames) - min(frames) >= minframe:
-            print max(frames) - min(frames)
             store.append(trace)
     return convert_traces_to_storage(store)

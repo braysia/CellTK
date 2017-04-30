@@ -16,7 +16,9 @@ from utils.filters import interpolate_nan
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
     if NEG:
-        return -calc_lapgauss(img, SIGMA)
+        img = -calc_lapgauss(img, SIGMA)
+        img[img < 0 ] = 0
+        return img
     return calc_lapgauss(img, SIGMA)
 
 

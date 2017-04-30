@@ -8,9 +8,7 @@ import argparse
 import tifffile as tiff
 from os.path import basename, join
 import numpy as np
-import os
 import segment_operation
-import ast
 from skimage.segmentation import clear_border
 from utils.filters import gray_fill_holes
 from skimage.morphology import remove_small_objects
@@ -18,7 +16,7 @@ from utils.filters import label
 from scipy.ndimage.morphology import binary_opening
 from utils.util import imread
 from utils.file_io import make_dirs
-from utils.parser import ParamParser
+from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
 
 
@@ -34,20 +32,16 @@ def clean_labels(labels, rad, OPEN=2):
     return labels
 
 
-def parse_image_files(inputs):
-    if "/" not in inputs:
-        return inputs
-    store = []
-    li = []
-    while inputs:
-        element = inputs.pop(0)
-        if element == "/":
-            store.append(li)
-            li = []
-        else:
-            li.append(element)
-    store.append(li)
-    return zip(*store)
+def caller(inputs, output, functions, params, radius):
+    for path in inputs:
+        img = imread(path)
+        for function, param in zip(functions, params):
+            func = getattr(segment_operation, function)
+            img = func(img, **param)
+        if isinstance(path, list) or isinstance(path, tuple):
+            path = path[0]
+        labels = clean_labels(img, radius)
+        tiff.imsave(join(output, basename(path)), labels.astype(np.int16))
 
 
 def main():
@@ -58,7 +52,7 @@ def main():
     parser.add_argument("-f", "--functions", help="functions", nargs="*", default=None)
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     parser.add_argument("-r", "--radius", help="minimum and maximum radius", nargs=2, default=[3, 50])
-    parser.add_argument("--open", help="OPENING parameters", nargs=1, default=2)
+    # parser.add_argument("--open", help="OPENING parameters", nargs=1, default=2)
     args = parser.parse_args()
     make_dirs(args.output)
 
@@ -69,16 +63,9 @@ def main():
         print help(segment_operation)
 
     holder.args = args
-    inputs = parse_image_files(args.input)
-    for path in inputs:
-        img = imread(path)
-        for function, param in zip(args.functions, params):
-            func = getattr(segment_operation, function)
-            img = func(img, **param)
-        if isinstance(path, list) or isinstance(path, tuple):
-            path = path[0]
-        labels = clean_labels(img, args.radius, args.open)
-        tiff.imsave(join(args.output, basename(path)), labels.astype(np.int16))
+    args.input = parse_image_files(args.input)
+
+    caller(args.input, args.output, args.functions, params, args.radius)
 
 
 if __name__ == "__main__":
