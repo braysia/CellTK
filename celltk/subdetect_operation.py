@@ -1,15 +1,16 @@
-from utils.subdetect_utils import dilate_to_cytoring
+from utils.subdetect_utils import dilate_to_cytoring, dilate_to_cytoring_buffer
 from utils.concave_seg import levelset_geo_separete
 from utils.concave_seg import run_concave_cut
 from utils.filters import MultiSnakesCombined
 from utils.concave_seg import levelset_lap
 from utils.filters import label
+from scipy.ndimage.filters import minimum_filter
 
 
 def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
     """Create a ring around label.
-    :param RINGWIDTH: Width of rings
-    :param MARGIN: A region of rings is ignored if they are within MARGIN pixels away from label.
+    :param RINGWIDTH (int): Width of rings
+    :param MARGIN (int): A region of rings is ignored if they are within MARGIN pixels away from label.
 
     Examples:
         >>> arr = np.zeros((5, 5));arr[2, 2] = 10
@@ -21,6 +22,30 @@ def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
                [ 0, 10, 10, 10,  0]], dtype=uint16)
     """
     return dilate_to_cytoring(labels, RINGWIDTH, MARGIN)
+
+
+def ring_dilation_buffer(labels, MARGIN=0, RINGWIDTH=4, BUFFER=2):
+    return dilate_to_cytoring_buffer(labels, RINGWIDTH, MARGIN, BUFFER)
+
+
+def ring_dilation_above_thres(labels, img,  MARGIN=2, RINGWIDTH=4,
+                              EXTRA_RINGWIDTH=15, THRES=50):
+    sub_label = dilate_to_cytoring(labels, RINGWIDTH, MARGIN)
+    extra_sub_label = dilate_to_cytoring(labels, EXTRA_RINGWIDTH, RINGWIDTH)
+    extra_sub_label[img < THRES] = 0
+    return sub_label + extra_sub_label
+
+
+def ring_dilation_above_offset_buffer(labels, img, MARGIN=0, RINGWIDTH=4, BUFFER=2,
+                                      OFFSET=100, FILSIZE=50):
+    """Dilate from label to make a ring.
+    Calculate the local minimum as a background, and if image is less brighter
+    than background + offset, remove the region from the ring.
+    """
+    sub_label = dilate_to_cytoring_buffer(labels, RINGWIDTH, MARGIN, BUFFER)
+    minimg = minimum_filter(img, size=FILSIZE)
+    sub_label[img < (minimg + OFFSET)] = 0
+    return sub_label
 
 
 def geodesic_levelset(labels, img, NITER=10, PROP=1):

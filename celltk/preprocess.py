@@ -15,12 +15,16 @@ from utils.parser import ParamParser, parse_image_files
 
 
 def caller(inputs, output, functions, params):
+    holder.inputs = inputs
+    make_dirs(output)
+
     for holder.frame, path in enumerate(inputs):
         img = imread(path)
         for function, param in zip(functions, params):
             func = getattr(preprocess_operation, function)
             img = func(img, **param)
         imsave(img, output, path)
+        print holder.frame
 
 
 def main():
@@ -30,7 +34,6 @@ def main():
     parser.add_argument("-f", "--functions", help="functions", nargs="*")
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     args = parser.parse_args()
-    make_dirs(args.output)
 
     params = ParamParser(args.param).run()
     args.input = parse_image_files(args.input)

@@ -20,6 +20,9 @@ from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
 
 
+radius = [3, 50]
+
+
 def clean_labels(labels, rad, OPEN=2):
     """default cleaning. Fill holes, remove small and large objects and opening.
     """
@@ -32,7 +35,9 @@ def clean_labels(labels, rad, OPEN=2):
     return labels
 
 
-def caller(inputs, output, functions, params, radius):
+def caller(inputs, output, functions, params):
+    make_dirs(output)
+
     for path in inputs:
         img = imread(path)
         for function, param in zip(functions, params):
@@ -51,13 +56,14 @@ def main():
                         type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="*", default=None)
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
-    parser.add_argument("-r", "--radius", help="minimum and maximum radius", nargs=2, default=[3, 50])
+    # parser.add_argument("-r", "--radius", help="minimum and maximum radius", nargs=2, default=[3, 50])
     # parser.add_argument("--open", help="OPENING parameters", nargs=1, default=2)
     args = parser.parse_args()
-    make_dirs(args.output)
+
+    # RADIUS = args.radius
 
     params = ParamParser(args.param).run()
-    args.radius = [float(i) for i in args.radius]
+    # args.radius = [float(i) for i in args.radius]
 
     if args.functions is None:
         print help(segment_operation)
@@ -65,7 +71,7 @@ def main():
     holder.args = args
     args.input = parse_image_files(args.input)
 
-    caller(args.input, args.output, args.functions, params, args.radius)
+    caller(args.input, args.output, args.functions, params)
 
 
 if __name__ == "__main__":

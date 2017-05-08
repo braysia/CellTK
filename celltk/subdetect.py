@@ -15,6 +15,8 @@ from utils.global_holder import holder
 
 
 def caller(inputs, inputs_labels, output, functions, params):
+    make_dirs(output)
+
     img = None
     for path, pathl in izip_longest(inputs, inputs_labels):
         if path is not None:
@@ -38,7 +40,6 @@ def main():
     parser.add_argument("-f", "--functions", help="functions", nargs="+")
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     args = parser.parse_args()
-    make_dirs(args.output)
 
     params = ParamParser(args.param).run()
     holder.args = args

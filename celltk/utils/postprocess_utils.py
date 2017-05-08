@@ -73,3 +73,4 @@ class Cell(object):
                 setattr(self, p, ret)
         self.coords = regionprop.coords
         self.abs_id = holder.count()
+        self.centroid = regionprop.centroid

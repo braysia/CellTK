@@ -19,14 +19,14 @@ from utils.track_utils import _find_best_neck_cut, _update_labels_neck_cut
 from utils.global_holder import holder
 from scipy.ndimage import gaussian_laplace, binary_dilation
 from utils.binary_ops import grey_dilation
-from subdetect_operation import propagate_multisnakes
 
 
 def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
     labels = -labels1.copy()
     rps0 = regionprops(labels0, img0)
     rps1 = regionprops(labels1, img1)
-
+    if not rps0 or not rps1:
+        return labels0, labels
     dist = cdist([i.centroid for i in rps0], [i.centroid for i in rps1])
     massdiff = calc_massdiff(rps0, rps1)
     binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)

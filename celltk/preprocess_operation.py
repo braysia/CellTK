@@ -62,21 +62,15 @@ def n4_illum_correction_downsample(img, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OF
     return convert_positive(img, OFFSET)
 
 
-def align(img, DOWN=2, CROP=0.05):
+def align(img, CROP=0.05):
     """
-    DOWN (int): The ratio of downsampling. When set to 2, image is reduced to 50% size.
-                If calculation is slow, set it to 3-4.
     CROP (float): crop images beforehand. When set to 0.05, 5% of each edges are cropped.
     """
-    def downsample(img, DOWN=DOWN):
-        fil = sitk.ShrinkImageFilter()
-        return sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(img), [DOWN, DOWN]))
-
     if not hasattr(holder, "align"):
-        if isinstance(holder.args.input[0], list) or isinstance(holder.args.input[0], tuple):
-            inputs = [i[0] for i in holder.args.input]
+        if isinstance(holder.inputs[0], list) or isinstance(holder.inputs[0], tuple):
+            inputs = [i[0] for i in holder.inputs]
         else:
-            inputs = holder.args.input
+            inputs = holder.inputs
 
         img0 = imread(inputs[0])
         shapes = img0.shape
@@ -86,14 +80,26 @@ def align(img, DOWN=2, CROP=0.05):
         cw = None if cw == 0 else cw
 
         img0 = img0[ch:-ch, cw:-cw]
-        img0 = downsample(img0, DOWN)
         mask = np.ones(img0.shape, np.bool)
         store = [(0, 0)]
-        for path in inputs[1:]:
-            img1 = imread(path)[ch:-ch, cw:-cw]
-            img1 = downsample(img1, DOWN)
-            j0, j1 = align_mutual_information(img0, img1, mask, mask)
-            store.append((j0 * DOWN, j1 * DOWN))
+        for path0, path1 in zip(inputs[:-1], inputs[1:]):
+            img0 = imread(path0)[ch:-ch, cw:-cw]
+            img1 = imread(path1)[ch:-ch, cw:-cw]
+
+            j0, j1, score0 = align_mutual_information(img0, img1, mask, mask)
+
+            """compare it to FFT based alignment and pick the higher mutual info.
+            align_mutual_information can often stack in a local solution.
+            """
+            from utils.mi_align import mutualinf, offset_slice
+            from utils.imreg import translation
+            jj1, jj0 = translation(img0, img1)
+            p2, p1 = offset_slice(img1, img0, jj1, jj0)
+            m2, m1 = offset_slice(mask, mask, jj1, jj0)
+            score1 = mutualinf(p1, p2, m1, m2)
+            if score1 > score0:
+                j0, j1 = jj0, jj1
+            store.append((store[-1][0] + j0, store[-1][1] + j1))
 
         max_w = max(i[0] for i in store)
         start_w = [max_w - i[0] for i in store]
@@ -108,6 +114,8 @@ def align(img, DOWN=2, CROP=0.05):
         return img[jt[0]:jt[1], jt[2]:jt[3]]
     if img.ndim == 3:
         return img[jt[0]:jt[1], jt[2]:jt[3], :]
+
+
 
 
 def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif']):

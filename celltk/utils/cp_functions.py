@@ -181,7 +181,7 @@ def align_mutual_information(pixels1, pixels2, mask1, mask2):
                     i = new_i
                     j = new_j
         if i == last_i and j == last_j:
-            return j, i
+            return j, i, best
 
 
 def offset_slice(pixels1, pixels2, i, j):

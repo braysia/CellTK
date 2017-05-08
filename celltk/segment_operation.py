@@ -30,7 +30,7 @@ def global_otsu(img):
     return label(img > global_thresh)
 
 
-def adaptive_thres(img, FIL1=10, FIL2=100, R1=100, R2=100):
+def adaptive_thres(img, FIL1=10, R1=100):
     """adaptive thresholding for picking objects with different brightness.
     """
     bw = adaptive_thresh(img, R=R1, FILTERINGSIZE=FIL1)

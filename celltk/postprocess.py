@@ -33,6 +33,7 @@ def cells2labels(cells, frame, shape):
 
 
 def caller(inputs, inputs_labels, output, functions, params):
+    make_dirs(output)
 
     # Make cells. cells are a list of regionproperties or subclasses.
     store = []
@@ -67,7 +68,6 @@ def main():
     parser.add_argument("-f", "--functions", help="functions", nargs="+")
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     args = parser.parse_args()
-    make_dirs(args.output)
     params = ParamParser(args.param).run()
     holder.args = args
 
