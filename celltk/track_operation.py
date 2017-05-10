@@ -22,6 +22,9 @@ from utils.binary_ops import grey_dilation
 
 
 def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):
+    """
+    labels0 and labels1: the positive values for non-tracked objects and the negative values for tracked objects.
+    """
     labels = -labels1.copy()
     rps0 = regionprops(labels0, img0)
     rps1 = regionprops(labels1, img1)
@@ -34,7 +37,6 @@ def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.
     for i0, i1 in zip(idx0, idx1):
         labels[labels1 == rps1[i1].label] = rps0[i0].label
         labels0[labels0 == rps0[i0].label] = -rps0[i0].label
-    print DISPLACEMENT
     return labels0, labels
 
 
@@ -98,6 +100,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
 
     gp, gc = np.where(binary_cost)
     idx0, idx1 = list(gp), list(gc)
+
     for i0, i1 in zip(idx0, idx1):
         labels[labels1 == rps1[i1].label] = rps0[i0].label
         labels0[labels0 == rps0[i0].label] = -rps0[i0].label
@@ -127,6 +130,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     """
     # labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
     # labels1 = -labels.copy()
+    CANDS_LIMIT = 300
     labels = -labels1.copy()
 
     if not hasattr(holder, "SMALL_RAD") and not hasattr(holder, "LARGE_RAD"):
@@ -155,13 +159,12 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
         cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD,
                         large_rad=LARGE_RAD, EDGELEN=EDGELEN, THRES=THRES_ANGLE)
         cc.prepare_coords_set()
-        candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set)
+        candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set[:CANDS_LIMIT])
         for c in candidates:
             c.raw_label = label_id
         store.append(candidates)
         coords_store.append(cc.coords_set)
     coords_store = [i for i in coords_store if i]
-
     # Attempt a first cut.
     good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
     labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)

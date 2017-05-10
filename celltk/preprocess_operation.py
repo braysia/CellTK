@@ -12,6 +12,7 @@ from utils.cp_functions import align_cross_correlation, align_mutual_information
 from scipy.ndimage import imread
 from glob import glob
 from utils.filters import interpolate_nan
+from scipy.optimize import minimize
 
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
@@ -117,17 +118,18 @@ def align(img, CROP=0.05):
 
 
 
-
-def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif']):
+def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp_corr=False):
     """
     Use empty images for background subtraction and illumination bias correction.
     Given multiple reference images, it will calculate median profile and use it for subtraction.
+    If flatfield image has the same illumination pattern but different exposure to the img,  
+    turning on bg_align would calculate correction factor.
 
     ff_paths (str or List(str)): image path for flat fielding references.
                                  It can be single, multiple or path with wildcards.
-
         e.g.    ff_paths = "FF/img_000000000_YFP*"
                 ff_paths = ["FF/img_01.tif", "FF/img_02.tif"]
+
     """
     store = []
     if isinstance(ff_paths, str):
@@ -139,6 +141,25 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif']):
     for path in store:
         ff_store.append(imread(path))
     ff = np.median(np.dstack(ff_store), axis=2)
+
+    if exp_corr:
+        """If a reference is taken at different exposure, or exposure is not stable over time,
+        this will try to correct for it. Majority of image needs to be a backrgound.
+        """
+        def minimize_bg(img, ff, corr, perctile=50, weight=1):
+            thres = np.percentile(img, perctile)
+            res = img - corr * ff
+            res = res[res < thres]
+            return np.sum(res[res>0]) - weight * np.sum(res[res < 0])
+        """avoid having negative values yet suppress positive values in background region.
+        """
+        func = lambda x: minimize_bg(img, ff, x)
+        if not hasattr(holder, 'bg_corr'):
+            holder.bg_corr = 1.0
+        ret = minimize(func, x0=holder.bg_corr, bounds=((0, None),))
+        holder.bg_corr = ret.x
+        ff = ret.x * ff
+
     img = img - ff
     img[img < 0] = np.nan
     img = interpolate_nan(img)

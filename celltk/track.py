@@ -33,7 +33,9 @@ def caller(inputs, inputs_labels, output, functions, params):
     tiff.imsave(join(output, basename(inputs[0])), labels0.astype(np.int16))
     for holder.frame, (path, pathl) in enumerate(zip(inputs[1:], inputs_labels[1:])):
         img1, labels1 = imread(path), tiff.imread(pathl).astype(np.int16)
+        tiff.imsave('temp.tif', labels1.astype(np.int16))
         labels1 = -labels1
+
         for fnum, (function, param) in enumerate(zip(functions, params)):
             func = getattr(track_operation, function)
             if not (labels1 < 0).any():

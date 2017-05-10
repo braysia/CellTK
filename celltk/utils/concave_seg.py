@@ -51,7 +51,9 @@ def calc_shortest_step_coords(coords, co1, co2):
 def find_oriented_coords(outline):
     cnt = cv2.findContours(outline.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[1][0]
     cnt = np.flipud(cnt)
-    assert cv2.contourArea(cnt, oriented=True) > 0
+    # assert cv2.contourArea(cnt, oriented=True) > 0
+    if not cv2.contourArea(cnt, oriented=True) > 0:
+        return None
     return np.fliplr(np.squeeze(cnt))
 
 
@@ -233,7 +235,9 @@ class CellCutter(object):
         self.cut_cells = []
 
     def extract_cell_outlines(self):
-        self.cell.o_coords = find_oriented_coords(self.bw)
+        o_coords = find_oriented_coords(self.bw)
+        if o_coords is not None:
+            self.cell.o_coords = o_coords
 
     def run(self):
         self.prepare_coords_set()
