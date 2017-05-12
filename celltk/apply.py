@@ -48,6 +48,7 @@ def df2larr(df):
         arr_labels.append(ind)
         arr[num, :, :] = df.ix[ind].values.T
     larr = LabeledArray(arr, arr_labels)
+    larr.time = np.arange(arr.shape[-1])
     return larr
 
 
@@ -75,6 +76,7 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
     for inputs, ch in zip(inputs_list, ch_names):
         for inputs_labels, obj in zip(inputs_labels_list, obj_names):
             for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
+                print ch, obj
                 img, labels = imread(path), tiff.imread(pathl).astype(np.int32)
                 cells = regionprops(labels, img)
                 [setattr(cell, 'frame', frame) for cell in cells]

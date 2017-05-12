@@ -3,7 +3,7 @@ from utils.concave_seg import levelset_geo_separete
 from utils.concave_seg import run_concave_cut
 from utils.filters import MultiSnakesCombined
 from utils.concave_seg import levelset_lap
-from utils.filters import label
+from utils.filters import label, adaptive_thresh
 from scipy.ndimage.filters import minimum_filter
 
 
@@ -46,6 +46,13 @@ def ring_dilation_above_offset_buffer(labels, img, MARGIN=0, RINGWIDTH=4, BUFFER
     minimg = minimum_filter(img, size=FILSIZE)
     sub_label[img < (minimg + OFFSET)] = 0
     return sub_label
+
+
+def ring_dilation_above_adaptive(labels, img, MARGIN=0, RINGWIDTH=4, BUFFER=2, RATIO=1.05, FILSIZE=10):
+    sub_labels = dilate_to_cytoring_buffer(labels, RINGWIDTH, MARGIN, BUFFER)
+    bw = adaptive_thresh(img, R=RATIO, FILTERINGSIZE=FILSIZE)
+    sub_labels[-bw] = 0
+    return sub_labels
 
 
 def geodesic_levelset(labels, img, NITER=10, PROP=1):
