@@ -1,7 +1,12 @@
 # CellTK
 
+Caller Example:
+```
+python celltk/caller.py input_files/ktr_inputs/input_anisoinh.py
+```
 
-Example:
+
+Commandline Example:
 ```
 python celltk/segment.py -i data/testimages0/CFP/img* -f constant_thres -p THRES=2000 -o output/c1
 
