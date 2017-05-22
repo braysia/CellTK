@@ -28,6 +28,6 @@ op006 = [dict(function='run_lap', MASSTHRES=0.25, DISPLACEMENT=20, inputdir='DAP
 op007 = [dict(function='gap_closing'),
          dict(function='cut_short_traces', minframe=100, output_folder='nuc')]
 
-op009 = dict(function='ring_dilation_above_adaptive', inputdir='YFP', output_folder='cyto')
+op009 = dict(function='ring_dilation_above_offset_buffer', OFFSET=200, inputdir='YFP', output_folder='cyto')
 
 op010 = dict(function='apply', ch_folders=['DAPI', 'YFP'], obj_folders=['nuc', 'cyto'])

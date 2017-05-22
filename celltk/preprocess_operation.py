@@ -146,7 +146,7 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp
         """If a reference is taken at different exposure, or exposure is not stable over time,
         this will try to correct for it. Majority of image needs to be a backrgound.
         """
-        def minimize_bg(img, ff, corr, perctile=50, weight=1):
+        def minimize_bg(img, ff, corr, perctile=50, weight=10):
             thres = np.percentile(img, perctile)
             res = img - corr * ff
             res = res[res < thres]
