@@ -108,13 +108,15 @@ def single_call(inputs):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-n", "--cores", help="number of cores for multiprocessing",
+                        type=int, default=1)
     parser.add_argument("input", nargs="*", help="input argument file path")
     args = parser.parse_args()
 
     if len(args.input) == 1:
         single_call(args.input[0])
     if len(args.input) > 1:
-        num_cores = 4
+        num_cores = args.cores
         print str(num_cores) + ' started parallel'
         Parallel(n_jobs=num_cores)(delayed(single_call)(i) for i in args.input)
 
