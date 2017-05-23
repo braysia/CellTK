@@ -8,6 +8,11 @@ from os.path import join, isdir, exists
 import preprocess, segment, track, postprocess, subdetect, apply
 import preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation
 from glob import glob
+from joblib import Parallel, delayed
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 operations = [preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation, apply]
 caller_modules = [preprocess, segment, track, postprocess, subdetect, apply]
@@ -95,15 +100,15 @@ def run_operation(argdict):
         else:
             inputs_labels = output
 
-from joblib import Parallel, delayed
-
 
 def single_call(inputs):
     argfile = imp.load_source('inputArgs', inputs)
     cp = CallerParser(argfile)
     cp.set_explicit_args()
     argdict = cp.argdict
+    logging.basicConfig(level=logging.INFO)
     run_operation(argdict)
+    logger.info("Caller finished.")
 
 
 def main():

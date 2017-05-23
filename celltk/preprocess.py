@@ -12,11 +12,16 @@ from utils.global_holder import holder
 from utils.file_io import make_dirs, imsave
 from utils.util import imread
 from utils.parser import ParamParser, parse_image_files
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def caller(inputs, output, functions, params):
     holder.inputs = inputs
     make_dirs(output)
+
+    logger.info("Functions {0} for {1} images.".format(functions, len(inputs)))
 
     for holder.frame, path in enumerate(inputs):
         img = imread(path)
@@ -24,7 +29,7 @@ def caller(inputs, output, functions, params):
             func = getattr(preprocess_operation, function)
             img = func(img, **param)
         imsave(img, output, path)
-        print holder.frame
+        logger.info("\tframe {0} done.".format(holder.frame))
 
 
 def main():
@@ -43,4 +48,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

@@ -10,11 +10,14 @@ import argparse
 import tifffile as tiff
 from os.path import basename, join, dirname, abspath
 import numpy as np
-from utils.postprocess_utils import regionprops # set default parent and next as None
+from utils.postprocess_utils import regionprops, Cell # set default parent and next as None
 from labeledarray import LabeledArray
 from os.path import exists
 from utils.file_io import make_dirs
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
@@ -75,15 +78,16 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
     store = []
     for inputs, ch in zip(inputs_list, ch_names):
         for inputs_labels, obj in zip(inputs_labels_list, obj_names):
+            logger.info("Channel {0}: {1} applied...".format(ch, obj))
             for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
-                print ch, obj
                 img, labels = imread(path), tiff.imread(pathl).astype(np.int32)
                 cells = regionprops(labels, img)
                 [setattr(cell, 'frame', frame) for cell in cells]
+                cells = [Cell(cell) for cell in cells]
                 store.append(cells)
 
+            logger.info("\tmaking dataframe...")
             df = multi_index([i for ii in store for i in ii], obj, ch)
-
             if exists(join(output, 'df.csv')):
                 ex_df = pd.read_csv(join(output, 'df.csv'), index_col=['object', 'ch', 'prop', 'frame'])
                 ex_df.columns = pd.to_numeric(ex_df.columns)
@@ -92,6 +96,7 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
             df.to_csv(join(output, 'df.csv'))
     larr = df2larr(df)
     larr.save(join(output, 'df.npz'))
+    logger.info("\tdf.npz saved.")
 
 
 def main():
@@ -105,8 +110,9 @@ def main():
 
     output = args.output
 
-    apply(args.inputs, args.labels, args.output, args.primary, args.secondary)
+    caller(args.inputs, args.labels, args.output, args.primary, args.secondary)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

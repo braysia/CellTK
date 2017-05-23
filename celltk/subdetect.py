@@ -12,11 +12,15 @@ from itertools import izip_longest
 from utils.file_io import make_dirs
 from utils.parser import ParamParser
 from utils.global_holder import holder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def caller(inputs, inputs_labels, output, functions, params):
     make_dirs(output)
 
+    logger.info("Functions {0} for {1} images.".format(functions, len(inputs)))
     img = None
     for path, pathl in izip_longest(inputs, inputs_labels):
         if path is not None:
@@ -29,6 +33,7 @@ def caller(inputs, inputs_labels, output, functions, params):
             else:
                 labels = func(labels0, **param)
         tiff.imsave(join(output, basename(pathl)), labels.astype(np.int16))
+        logger.info("\tframe {0} done.".format(holder.frame))
 
 
 def main():
@@ -47,4 +52,5 @@ def main():
     caller(args.input, args.labels, args.output, args.functions, params)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

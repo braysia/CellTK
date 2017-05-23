@@ -14,6 +14,9 @@ import ast
 from utils.file_io import make_dirs
 from utils.parser import ParamParser
 from utils.global_holder import holder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def neg2poslabels(labels):
@@ -42,6 +45,8 @@ def caller(inputs, inputs_labels, output, functions, params):
                 continue
             labels0, labels1 = func(img0, img1, labels0, -labels1, **param)
 
+        logger.info("\tframe {0}: {1} objects linked and {2} unlinked.".format(holder.frame,
+                    len(set(labels1[labels1 > 0])), len(set(labels1[labels1 < 0]))))
         labels0 = neg2poslabels(labels1)
         img0 = img1
         tiff.imsave(join(output, basename(path)), labels0.astype(np.int16))
@@ -54,7 +59,6 @@ def main():
     parser.add_argument("-o", "--output", help="output directory",
                         type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="+")
-    # parser.add_argument("-p", "--param", nargs="*", help="parameters", type=lambda kv: kv.split("="), default={})
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     args = parser.parse_args()
 
@@ -65,4 +69,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

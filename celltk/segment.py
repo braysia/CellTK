@@ -18,7 +18,9 @@ from utils.util import imread
 from utils.file_io import make_dirs
 from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
+import logging
 
+logger = logging.getLogger(__name__)
 
 radius = [3, 50]
 
@@ -37,6 +39,7 @@ def clean_labels(labels, rad, OPEN=2):
 
 def caller(inputs, output, functions, params):
     make_dirs(output)
+    logger.info("Functions {0} for {1} images.".format(functions, len(inputs)))
 
     for path in inputs:
         img = imread(path)
@@ -47,6 +50,7 @@ def caller(inputs, output, functions, params):
             path = path[0]
         labels = clean_labels(img, radius)
         tiff.imsave(join(output, basename(path)), labels.astype(np.int16))
+        logger.info("\tframe {0}: {1} objects segmented.".format(holder.frame, len(np.unique(labels))))
 
 
 def main():
@@ -75,4 +79,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
