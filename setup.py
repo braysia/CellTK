@@ -7,10 +7,4 @@ setup(
     author='Takamasa Kudo',
     author_email='kudo@stanford.edu',
     license="MIT License",
-    entry_points={
-        "console_scripts": [
-            "csegment=celltk.segment:main",
-            "csubdetect=celltk.subdetect:main",
-        ],
-    }
 )
