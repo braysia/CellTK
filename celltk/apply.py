@@ -11,7 +11,10 @@ import tifffile as tiff
 from os.path import basename, join, dirname, abspath
 import numpy as np
 from utils.postprocess_utils import regionprops, Cell # set default parent and next as None
-from labeledarray import LabeledArray
+try:
+    from labeledarray import LabeledArray
+except:
+    from celltk.labeledarray import LabeledArray
 from os.path import exists
 from utils.file_io import make_dirs
 import pandas as pd
