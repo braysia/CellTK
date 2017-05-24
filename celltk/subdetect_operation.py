@@ -36,7 +36,7 @@ def ring_dilation_above_thres(labels, img,  MARGIN=2, RINGWIDTH=4,
     return sub_label + extra_sub_label
 
 
-def ring_dilation_above_offset_buffer(labels, img, MARGIN=0, RINGWIDTH=4, BUFFER=2,
+def ring_dilation_above_offset_buffer(labels, img, MARGIN=0, RINGWIDTH=2, BUFFER=2,
                                       OFFSET=100, FILSIZE=50):
     """Dilate from label to make a ring.
     Calculate the local minimum as a background, and if image is less brighter

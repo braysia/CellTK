@@ -7,11 +7,11 @@ output_folder
 from os.path import join, dirname, abspath
 
 
-OUTPUT_DIR = 'output/IL1B/Pos005'
+OUTPUT_DIR = '/home/output/IL1B/Pos005'
 
-op0000 = dict(function='flatfield_references', inputdir='data/KTRimages/IL1B/Pos005/*DAPI*', ff_paths="data/KTRimages/IL1B/FF/*DAPI*", output_folder='op000')
-op0001 = dict(function='flatfield_references', inputdir='data/KTRimages/IL1B/Pos005/*YFP*', ff_paths="data/KTRimages/IL1B/FF/*YFP*", output_folder='op000')
-op0002 = dict(function='flatfield_references', inputdir='data/KTRimages/IL1B/Pos005/*TRITC*', ff_paths="data/KTRimages/IL1B/FF/*TRITC*", output_folder='op000')
+op0000 = dict(function='flatfield_references', inputdir='../KTRimages/IL1B/Pos005/*DAPI*', ff_paths="../KTRimages/IL1B/FF/*DAPI*", output_folder='op000')
+op0001 = dict(function='flatfield_references', inputdir='../KTRimages/IL1B/Pos005/*YFP*', ff_paths="../KTRimages/IL1B/FF/*YFP*", output_folder='op000')
+op0002 = dict(function='flatfield_references', inputdir='../KTRimages/IL1B/Pos005/*TRITC*', ff_paths="../KTRimages/IL1B/FF/*TRITC*", output_folder='op000')
 
 op001 = dict(function='align', CROP=0.15, inputdir=["op000/*DAPI*", "op000/*YFP*", "op000/*TRITC*"])
 op002 = [dict(function='histogram_match', inputdir='op001/*DAPI*'), 
@@ -29,6 +29,6 @@ op006 = [dict(function='run_lap', MASSTHRES=0.25, DISPLACEMENT=25),
 op007 = [dict(function='gap_closing'),
          dict(function='cut_short_traces', minframe=100, output_folder='nuc')]
 
-op008 = dict(function='ring_dilation_above_offset_buffer', OFFSET=100, inputdir='op001/*TRITC*', output_folder='cyto')
+op008 = dict(function='ring_dilation_above_offset_buffer', RINGWIDTH=2, OFFSET=100, inputdir='op001/*TRITC*', output_folder='cyto')
 
 op010 = dict(function='apply', ch_folders=['DAPI/*', 'op001/*YFP*', 'op001/*TRITC*'], obj_folders=['nuc', 'cyto'], ch_names=['DAPI', 'YFP', 'TRITC'])

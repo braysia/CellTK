@@ -7,11 +7,11 @@ output_folder
 from os.path import join, dirname, abspath
 
 
-OUTPUT_DIR = 'output/IL1B/Pos007'
+OUTPUT_DIR = '/home/output/IL1B/Pos007'
 
-op0000 = dict(function='flatfield_references', inputdir='data/KTRimages/IL1B/Pos007/*DAPI*', ff_paths="data/KTRimages/IL1B/FF/*DAPI*", output_folder='op000')
-op0001 = dict(function='flatfield_references', inputdir='data/KTRimages/IL1B/Pos007/*YFP*', ff_paths="data/KTRimages/IL1B/FF/*YFP*", output_folder='op000')
-op0002 = dict(function='flatfield_references', inputdir='data/KTRimages/IL1B/Pos007/*TRITC*', ff_paths="data/KTRimages/IL1B/FF/*TRITC*", output_folder='op000')
+op0000 = dict(function='flatfield_references', inputdir='../KTRimages/IL1B/Pos007/*DAPI*', ff_paths="../KTRimages/IL1B/FF/*DAPI*", output_folder='op000')
+op0001 = dict(function='flatfield_references', inputdir='../KTRimages/IL1B/Pos007/*YFP*', ff_paths="../KTRimages/IL1B/FF/*YFP*", output_folder='op000')
+op0002 = dict(function='flatfield_references', inputdir='../KTRimages/IL1B/Pos007/*TRITC*', ff_paths="../KTRimages/IL1B/FF/*TRITC*", output_folder='op000')
 
 op001 = dict(function='align', CROP=0.15, inputdir=["op000/*DAPI*", "op000/*YFP*", "op000/*TRITC*"])
 op002 = [dict(function='histogram_match', inputdir='op001/*DAPI*'), 

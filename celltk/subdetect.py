@@ -22,7 +22,7 @@ def caller(inputs, inputs_labels, output, functions, params):
 
     logger.info("Functions {0} for {1} images.".format(functions, len(inputs)))
     img = None
-    for path, pathl in izip_longest(inputs, inputs_labels):
+    for holder.frame, (path, pathl) in enumerate(izip_longest(inputs, inputs_labels)):
         if path is not None:
             img = imread(path)
         labels0 = tiff.imread(pathl).astype(np.int16)

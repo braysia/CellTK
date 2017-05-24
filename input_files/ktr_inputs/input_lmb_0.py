@@ -7,10 +7,10 @@ output_folder
 from os.path import join, dirname, abspath
 
 
-OUTPUT_DIR = 'output/LMB/Pos004'
+OUTPUT_DIR = '/home/output/LMB/Pos004'
 
-op000 = dict(function='flatfield_references', inputdir='data/KTRimages/LMB/Pos004/*DAPI*', ff_paths="data/KTRimages/LMB/FF/*DAPI*", exp_corr=True, output_folder='DAPI')
-op001 = dict(function='flatfield_references', inputdir='data/KTRimages/LMB/Pos004/*YFP*', ff_paths="data/KTRimages/LMB/FF/*YFP*", output_folder='YFP')
+op000 = dict(function='flatfield_references', inputdir='../KTRimages/LMB/Pos004/*DAPI*', ff_paths="../KTRimages/LMB/FF/*DAPI*", exp_corr=True, output_folder='DAPI')
+op001 = dict(function='flatfield_references', inputdir='../KTRimages/LMB/Pos004/*YFP*', ff_paths="../KTRimages/LMB/FF/*YFP*", output_folder='YFP')
 
 op002 = [dict(function='histogram_match', inputdir='DAPI'), 
          dict(function="curvature_anisotropic_smooth", NITER=30, output_folder='DAPI')]
