@@ -105,9 +105,8 @@ def single_call(inputs):
     argfile = imp.load_source('inputArgs', inputs)
     cp = CallerParser(argfile)
     cp.set_explicit_args()
-    argdict = cp.argdict
     logging.basicConfig(level=logging.INFO)
-    run_operation(argdict)
+    run_operation(cp.argdict)
     logger.info("Caller finished.")
 
 

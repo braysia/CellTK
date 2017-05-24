@@ -37,9 +37,27 @@ docker run -it -v /folder_you_want_to_mount:/home/ braysia/celltk
 ```
 Add "-p 8888:8888" for running jupyter notebook from the docker image.
 
-## Temp
-Two major data types are "img" and "labels".  
+## Processes
+Currently there are five major processes.
+1. preprocess
+2. segment
+3. subdetect
+4. tracking
+5. postprocess
+
+For each processes, you can find two modules in celltk (e.g. preprocess.py and preprocess_operations.py).  
+The *\*_operations.py* file contains a list of functions, which they take an input image and transform it. 
+
+Two major data types recurrently used are "img" and "labels".  
 img: np.ndarray[np.float32]  
-labels: np.ndarray[np.int32]
+labels: np.ndarray[np.int16]
+
+Each processes have an input and output of a certain data type.  
+1. preprocess: img -> img
+2. segment: img -> labels
+3. subdetect: labels (and img) -> labels
+4. tracking: labels -> labels
+5. postprocess: labels -> labels
+
 
 
