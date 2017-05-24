@@ -19,7 +19,7 @@ op006 = [dict(function='gap_closing'),
          dict(function='cut_short_traces', minframe=100, output_folder='nuc')]
 
 op007 = dict(function='flatfield_references', inputdir='/home/KTRimages/AnisoInh/Pos0/img*YFP*',
-             ff_paths='../KTRimages/AnisoInh/FF/img*YFP*', output_folder='YFP')
+             ff_paths='/home/KTRimages/AnisoInh/FF/img*YFP*', output_folder='YFP')
 op008 = dict(function='ring_dilation_above_offset_buffer', OFFSET=200, inputdir='YFP', output_folder='cyto')
 
 op009 = dict(function='apply', ch_folders=['DAPI', 'YFP'], obj_folders=['nuc', 'cyto'])
