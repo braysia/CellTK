@@ -7,4 +7,9 @@ setup(
     author='Takamasa Kudo',
     author_email='kudo@stanford.edu',
     license="MIT License",
+    entry_points={
+        "console_scripts": [
+            "celltk=celltk.caller:main",
+        ],
+    }
 )

@@ -9,8 +9,8 @@ from os.path import join, dirname, abspath
 
 OUTPUT_DIR = '/home/output/LMB/Pos005'
 
-op000 = dict(function='flatfield_references', inputdir='../KTRimages/LMB/Pos005/*DAPI*', ff_paths="../KTRimages/LMB/FF/*DAPI*", exp_corr=True)
-op001 = dict(function='flatfield_references', inputdir='../KTRimages/LMB/Pos005/*YFP*', ff_paths="../KTRimages/LMB/FF/*YFP*", exp_corr=True)
+op000 = dict(function='flatfield_references', inputdir='/home/KTRimages/LMB/Pos005/*DAPI*', ff_paths="/home/KTRimages/LMB/FF/*DAPI*", exp_corr=True)
+op001 = dict(function='flatfield_references', inputdir='/home/KTRimages/LMB/Pos005/*YFP*', ff_paths="/home/KTRimages/LMB/FF/*YFP*", exp_corr=True)
 op002 = dict(function='align', CROP=0.15, inputdir=["op000/*DAPI*", "op001/*YFP*"])
 
 op003 = [dict(function='histogram_match', inputdir='op002/*DAPI*'), 
