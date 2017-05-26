@@ -10,25 +10,20 @@ import preprocess_operation, segment_operation, track_operation, postprocess_ope
 from glob import glob
 from joblib import Parallel, delayed
 import logging
+import yaml
 
 logger = logging.getLogger(__name__)
 
 
-operations = [preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation, apply]
+ops_modules = [preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation, apply]
 caller_modules = [preprocess, segment, track, postprocess, subdetect, apply]
 
 
-class CallerParser(object):
-    def __init__(self, argfile):
-        self.argfile = argfile
-        self.argdict = {}
-
-    def set_explicit_args(self):
-        ia_args = [a for a in dir(self.argfile) if not a.startswith('_')]
-        ia_args = [a for a in ia_args if not isinstance(getattr(self.argfile, a), types.ModuleType)]
-        ia_args = [a for a in ia_args if not isinstance(getattr(self.argfile, a), types.FunctionType)]
-        for a in ia_args:
-            self.argdict[a] = getattr(self.argfile, a)
+def extract_path(path):
+    f = glob(path)
+    if isdir(f[0]) or not f:
+        f = glob(join(path, '*'))
+    return f
 
 
 def prepare_path_list(inputs, outputdir):
@@ -45,68 +40,71 @@ def prepare_path_list(inputs, outputdir):
         if not in0:
             in0 = zip(*[glob(join(i, '*')) for i in inputs])
         if not in0:
-            in0 = zip(*[glob(join(outputdir, i)) for i in inputs])
-        if not in0:
-            in0 = zip(*[glob(join(outputdir, i, '*')) for i in inputs])
+            in0 = zip(*[extract_path(join(outputdir, i)) for i in inputs])
+        # if not in0:
+        #     in0 = zip(*[glob(join(outputdir, i, '*')) for i in inputs])
     return in0
 
 
-def run_operation(argdict):
-    inputs, inputs_labels = [], []
-    ops = sorted([i for i in argdict.iterkeys() if i.startswith("op")])
-    for op in ops:
-        methods = argdict[op]
-        methods = [methods, ] if not isinstance(methods, list) else methods
 
-        inputdir = [i for i in methods if 'inputdir' in i]
-        if inputdir:
-            inputs = inputdir[0].pop('inputdir')
-        inputs = prepare_path_list(inputs, argdict['OUTPUT_DIR'])
-
-        labels_folder = [i for i in methods if 'labels_folder' in i]
-        if labels_folder:
-            inputs_labels = labels_folder[0].pop("labels_folder")
-        inputs_labels = prepare_path_list(inputs_labels, argdict['OUTPUT_DIR'])
-
-        functions, params = [], []
-        for method in methods:
-
-            if "output_folder" not in method:
-                output = join(argdict['OUTPUT_DIR'], op)
-            else:
-                output = join(argdict['OUTPUT_DIR'], method.pop('output_folder'))
-            functions.append(method.pop('function'))
-            params.append(method)
-
-        module = [m for m, top in zip(caller_modules, operations) if hasattr(top, functions[0])][0]
-        caller = getattr(module, "caller")
-
-        if functions[0] == 'apply':
-            ch_folders = method.pop('ch_folders')
-            obj_folders = method.pop('obj_folders')
-            inputs_list = [prepare_path_list(ch, argdict['OUTPUT_DIR']) for ch in ch_folders]
-            inputs_labels_list = [prepare_path_list(obj, argdict['OUTPUT_DIR']) for obj in obj_folders]
-            ch_names = ch_folders if 'ch_names' not in method else method.pop('ch_names')
-            obj_names = obj_folders if 'obj_names' not in method else method.pop('obj_names')
-            caller(inputs_list, inputs_labels_list, argdict['OUTPUT_DIR'], obj_names, ch_names)
-            return
-        if 'preprocess' in str(module) or 'segment' in str(module):
-            caller(inputs, output, functions, params=params)
+def retrieve_in_list(obj, key, empty=[]):
+    if isinstance(obj, dict):
+        obj = [obj, ]
+    st = []
+    for ob in obj:
+        if key not in ob:
+            st.append(empty)
         else:
-            caller(inputs, inputs_labels, output, functions, params=params)
+            st.append(ob[key])
+    return st
 
-        if module == preprocess:
-            inputs = output
-        else:
-            inputs_labels = output
+
+def parse_operation(operation):
+    functions = retrieve_in_list(operation, 'function')
+    params = retrieve_in_list(operation, 'params', empty={})
+    images = retrieve_in_list(operation, 'images')[0]
+    labels = retrieve_in_list(operation, 'labels')[0]
+    output = retrieve_in_list(operation, 'output')[-1]
+    return functions, params, images, labels, output
+
+
+def _retrieve_caller_based_on_function(function):
+    module = [m for m, top in zip(caller_modules, ops_modules) if hasattr(top, function)][0]
+    return getattr(module, "caller")
+
+
+def run_operation(output_dir, operation):
+    functions, params, images, labels, output = parse_operation(operation)
+    inputs = prepare_path_list(images, output_dir)
+    inputs_labels = prepare_path_list(labels, output_dir)
+    output = join(output_dir, output) if output else output_dir
+    caller = _retrieve_caller_based_on_function(functions[0])
+
+    if len(functions) == 1 and functions[0] == 'apply':
+        ch_names = operation['ch_names'] if 'ch_names' in operation else images
+        obj_names = operation['obj_names'] if 'obj_names' in operation else labels
+        caller(inputs, inputs_labels, output, obj_names, ch_names)
+    elif not inputs_labels:
+        caller(inputs, output, functions, params=params)
+    else:
+        caller(inputs, inputs_labels, output, functions, params=params)
+
+
+def run_operations(output_dir, operations):
+    for operation in operations:
+        run_operation(output_dir, operation)
+
+
+def load_yaml(path):
+    with open(path) as stream:
+        contents = yaml.load(stream)
+    return contents
 
 
 def single_call(inputs):
-    argfile = imp.load_source('inputArgs', inputs)
-    cp = CallerParser(argfile)
-    cp.set_explicit_args()
+    contents = load_yaml(inputs)
     logging.basicConfig(level=logging.INFO)
-    run_operation(cp.argdict)
+    run_operations(contents['OUTPUT_DIR'], contents['operations'])
     logger.info("Caller finished.")
 
 
