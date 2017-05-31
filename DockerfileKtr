@@ -1,14 +1,12 @@
 FROM braysia/celltk
 
 WORKDIR /root
-# RUN wget http://archive.simtk.org/ktrprotocol/CellTK.zip && unzip CellTK.zip \
-#     && wget http://archive.simtk.org/ktrprotocol/covertrace.zip && unzip covertrace.zip \
-#     && rm CellTK.zip covertrace.zip
-RUN git clone --recursive https://github.com/braysia/CellTK.git
-RUN git clone --recursive https://github.com/braysia/covertrace.git
-WORKDIR /root/CellTK
+RUN wget https://github.com/braysia/CellTK/archive/v0.1.zip && unzip v0.1.zip && rm v0.1.zip\
+    && wget https://github.com/braysia/covertrace/archive/v0.1.zip && unzip v0.1.zip && rm v0.1.zip
+
+WORKDIR /root/CellTK-0.1
 RUN python setup.py install
-WORKDIR /root/covertrace
+WORKDIR /root/covertrace-0.1
 RUN python setup.py  install
 RUN pip install seaborn==0.7.1 bokeh==0.12.5
 WORKDIR /home
