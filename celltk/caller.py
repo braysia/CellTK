@@ -83,7 +83,7 @@ def run_operation(output_dir, operation):
     if len(functions) == 1 and functions[0] == 'apply':
         ch_names = operation['ch_names'] if 'ch_names' in operation else images
         obj_names = operation['obj_names'] if 'obj_names' in operation else labels
-        caller(inputs, inputs_labels, output, obj_names, ch_names)
+        caller(zip(*inputs), zip(*inputs_labels), output, obj_names, ch_names)
     elif not inputs_labels:
         caller(inputs, output, functions, params=params)
     else:
