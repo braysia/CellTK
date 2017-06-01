@@ -1,9 +1,5 @@
 
-import imp
 import argparse
-import types
-from segment import caller as segment_caller
-import importlib
 from os.path import join, isdir, exists
 from glob import glob
 from joblib import Parallel, delayed
