@@ -101,7 +101,7 @@ def load_yaml(path):
 def single_call(inputs):
     contents = load_yaml(inputs)
 
-    make_dirs(join(contents['OUTPUT_DIR'], 'log.txt'))
+    make_dirs(contents['OUTPUT_DIR'])
     logging.basicConfig(filename=join(contents['OUTPUT_DIR'], 'log.txt'), level=logging.DEBUG)
     logging.getLogger("PIL").setLevel(logging.WARNING)
 
@@ -110,7 +110,7 @@ def single_call(inputs):
     logger.info("Caller finished.")
 
 
-def _main():
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", "--cores", help="number of cores for multiprocessing",
                         type=int, default=1)
@@ -125,4 +125,4 @@ def _main():
         Parallel(n_jobs=num_cores)(delayed(single_call)(i) for i in args.input)      
 
 if __name__ == "__main__":
-    _main()
+    main()
