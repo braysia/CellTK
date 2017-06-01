@@ -2,9 +2,12 @@
 import argparse
 from os.path import join, isdir, exists
 from glob import glob
-from joblib import Parallel, delayed
 import logging
+from logging import FileHandler, StreamHandler
 import yaml
+# from multiprocessing import Pool
+from joblib import Parallel, delayed
+from utils.file_io import make_dirs
 
 logger = logging.getLogger(__name__)
 
@@ -97,12 +100,16 @@ def load_yaml(path):
 
 def single_call(inputs):
     contents = load_yaml(inputs)
-    logging.basicConfig(level=logging.INFO)
+
+    logging.basicConfig(filename=join(contents['OUTPUT_DIR'], 'log.txt'), level=logging.DEBUG)
+    logging.getLogger("PIL").setLevel(logging.WARNING)
+
+    logger.debug('INPUT:\n{0}'.format(inputs))
     run_operations(contents['OUTPUT_DIR'], contents['operations'])
     logger.info("Caller finished.")
 
 
-def main():
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", "--cores", help="number of cores for multiprocessing",
                         type=int, default=1)
@@ -114,8 +121,7 @@ def main():
     if len(args.input) > 1:
         num_cores = args.cores
         print str(num_cores) + ' started parallel'
-        Parallel(n_jobs=num_cores)(delayed(single_call)(i) for i in args.input)
-
+        Parallel(n_jobs=num_cores)(delayed(single_call)(i) for i in args.input)      
 
 if __name__ == "__main__":
-    main()
+    _main()

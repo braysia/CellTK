@@ -114,6 +114,7 @@ def align(img, CROP=0.05):
         start_h = [max_h - i[1] for i in store]
         size_h = min([shapes[0] + i[1] for i in store]) - max_h
         holder.align = [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
+        logger.debug('holder.align set to {0}'.format(holder.align))
 
     jt = holder.align[holder.frame]
     logger.debug('Jitter: {0}'.format(jt))
