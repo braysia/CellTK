@@ -101,6 +101,7 @@ def load_yaml(path):
 def single_call(inputs):
     contents = load_yaml(inputs)
 
+    make_dirs(join(contents['OUTPUT_DIR'], 'log.txt'))
     logging.basicConfig(filename=join(contents['OUTPUT_DIR'], 'log.txt'), level=logging.DEBUG)
     logging.getLogger("PIL").setLevel(logging.WARNING)
 
