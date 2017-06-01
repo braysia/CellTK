@@ -6,6 +6,7 @@ from utils.filters import label_watershed
 from utils.binary_ops import grey_dilation
 import numpy as np
 from scipy.ndimage import gaussian_laplace, binary_dilation, binary_opening, binary_closing
+np.random.seed(0)
 
 
 def constant_thres(img, THRES=2000, NEG=False):

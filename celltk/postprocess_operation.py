@@ -2,6 +2,7 @@ from utils.traces import TracesController
 from utils.pairwise import one_to_one_assignment
 import numpy as np
 from utils.traces import construct_traces_based_on_next, convert_traces_to_storage, label_traces
+np.random.seed(0)
 
 
 def gap_closing(cells, DISPLACEMENT=100, MASSTHRES=0.15, maxgap=4):

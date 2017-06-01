@@ -13,10 +13,11 @@ from glob import glob
 from utils.filters import interpolate_nan
 from scipy.optimize import minimize
 import logging
-from preprocess import holder
+from utils.global_holder import holder
 
 
 logger = logging.getLogger(__name__)
+np.random.seed(0)
 
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
@@ -116,6 +117,7 @@ def align(img, CROP=0.05):
 
     jt = holder.align[holder.frame]
     logger.debug('Jitter: {0}'.format(jt))
+    logger.info('test {0}: {1}, {2}, {3}'.format(id(holder), id(holder.align), id(jt), holder.path))
     if img.ndim == 2:
         return img[jt[0]:jt[1], jt[2]:jt[3]]
     if img.ndim == 3:

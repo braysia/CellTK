@@ -19,6 +19,7 @@ from utils.track_utils import _find_best_neck_cut, _update_labels_neck_cut
 from utils.global_holder import holder
 from scipy.ndimage import gaussian_laplace, binary_dilation
 from utils.binary_ops import grey_dilation
+np.random.seed(0)
 
 
 def nearest_neighbor(img0, img1, labels0, labels1, DISPLACEMENT=20, MASSTHRES=0.2):

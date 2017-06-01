@@ -5,6 +5,7 @@ from utils.filters import MultiSnakesCombined
 from utils.concave_seg import levelset_lap
 from utils.filters import label, adaptive_thresh
 from scipy.ndimage.filters import minimum_filter
+np.random.seed(0)
 
 
 def ring_dilation(labels, MARGIN=0, RINGWIDTH=4):
