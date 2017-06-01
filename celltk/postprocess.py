@@ -9,7 +9,7 @@ from os.path import basename, join
 import numpy as np
 import postprocess_operation
 from utils.postprocess_utils import regionprops, Cell # set default parent and next as None
-from utils.file_io import make_dirs
+from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
@@ -63,7 +63,7 @@ def caller(inputs, inputs_labels, output, functions, params):
     logger.info('\tsaving images...')
     for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
         labels = cells2labels(cells, frame, imread(path).shape)
-        tiff.imsave(join(output, basename(path)), labels.astype(np.int32))
+        imsave(labels, output, path, dtype=np.int16)
 
 
 def main():

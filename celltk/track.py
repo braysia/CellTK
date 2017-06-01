@@ -11,7 +11,7 @@ import numpy as np
 import os
 import track_operation
 import ast
-from utils.file_io import make_dirs
+from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
@@ -49,7 +49,7 @@ def caller(inputs, inputs_labels, output, functions, params):
                     len(set(labels1[labels1 > 0])), len(set(labels1[labels1 < 0]))))
         labels0 = neg2poslabels(labels1)
         img0 = img1
-        tiff.imsave(join(output, basename(path)), labels0.astype(np.int16))
+        imsave(labels0, output, path, dtype=np.int16)
 
 
 def main():

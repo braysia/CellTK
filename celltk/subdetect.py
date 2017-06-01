@@ -9,7 +9,7 @@ from os.path import basename, join
 import numpy as np
 import subdetect_operation
 from itertools import izip_longest
-from utils.file_io import make_dirs
+from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
@@ -32,7 +32,7 @@ def caller(inputs, inputs_labels, output, functions, params):
                 labels = func(labels0, img, **param)
             else:
                 labels = func(labels0, **param)
-        tiff.imsave(join(output, basename(pathl)), labels.astype(np.int16))
+        imsave(labels, output, pathl, dtype=np.int16)
         logger.info("\tframe {0} done.".format(holder.frame))
 
 

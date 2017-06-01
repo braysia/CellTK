@@ -2,6 +2,9 @@ import os
 import tifffile as tiff
 from os.path import basename, join
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def make_dirs(path):
@@ -12,13 +15,17 @@ def make_dirs(path):
             raise
 
 
-def imsave(img, output, path):
+def imsave(img, output, path, dtype=np.float32):
     """
     save a single image or multiple images.
     len(path) == img.shape[2]
     """
     if isinstance(path, list) or isinstance(path, tuple):
         for num, p in enumerate(path):
-            tiff.imsave(join(output, basename(p)), img[:, :, num].astype(np.float32))
+            filename = join(output, basename(p).split('.')[0]+'.tif')
+            logger.debug('Image (shape {0}) is saved at {1}'.format(img.shape, filename))
+            tiff.imsave(filename, img[:, :, num].astype(dtype))
     else:
-        tiff.imsave(join(output, basename(path)), img.astype(np.float32))
+        filename = join(output, basename(path).split('.')[0]+'.tif')
+        logger.debug('Image (shape {0}) is saved at {1}'.format(img.shape, filename))
+        tiff.imsave(filename, img.astype(dtype))

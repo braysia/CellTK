@@ -7,12 +7,16 @@ from utils.preprocess_utils import convert_positive, estimate_background_prc
 from utils.preprocess_utils import resize_img
 from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen
 from utils.filters import adaptive_thresh
-from utils.global_holder import holder
 from utils.cp_functions import align_cross_correlation, align_mutual_information
 from scipy.ndimage import imread
 from glob import glob
 from utils.filters import interpolate_nan
 from scipy.optimize import minimize
+import logging
+from preprocess import holder
+
+
+logger = logging.getLogger(__name__)
 
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
@@ -111,6 +115,7 @@ def align(img, CROP=0.05):
         holder.align = [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
 
     jt = holder.align[holder.frame]
+    logger.debug('Jitter: {0}'.format(jt))
     if img.ndim == 2:
         return img[jt[0]:jt[1], jt[2]:jt[3]]
     if img.ndim == 3:

@@ -15,7 +15,7 @@ from skimage.morphology import remove_small_objects
 from utils.filters import label
 from scipy.ndimage.morphology import binary_opening
 from utils.util import imread
-from utils.file_io import make_dirs
+from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
 import logging
@@ -49,7 +49,7 @@ def caller(inputs, output, functions, params):
         if isinstance(path, list) or isinstance(path, tuple):
             path = path[0]
         labels = clean_labels(img, radius)
-        tiff.imsave(join(output, basename(path)), labels.astype(np.int16))
+        imsave(labels, output, path, dtype=np.int16)
         logger.info("\tframe {0}: {1} objects segmented.".format(holder.frame, len(np.unique(labels))))
 
 
