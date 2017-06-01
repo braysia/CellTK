@@ -74,6 +74,10 @@ def main():
     parser.add_argument("-f", "--functions", help="functions", nargs="+")
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     args = parser.parse_args()
+
+    if args.functions is None:
+        print help(postprocess_operation)
+
     params = ParamParser(args.param).run()
     holder.args = args
 

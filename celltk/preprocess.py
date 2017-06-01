@@ -7,8 +7,8 @@ python celltk/preprocess.py -f gaussian_laplace -i c0/img_00000000*
 
 # from scipy.ndimage import imread
 import argparse
-import preprocess_operation
 from utils.global_holder import holder
+import preprocess_operation
 from utils.file_io import make_dirs, imsave
 from utils.util import imread
 from utils.parser import ParamParser, parse_image_files
@@ -39,6 +39,9 @@ def main():
     parser.add_argument("-f", "--functions", help="functions", nargs="*")
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
     args = parser.parse_args()
+
+    if args.functions is None:
+        print help(preprocess_operation)
 
     params = ParamParser(args.param).run()
     args.input = parse_image_files(args.input)
