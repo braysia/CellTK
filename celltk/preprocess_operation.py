@@ -117,7 +117,6 @@ def align(img, CROP=0.05):
 
     jt = holder.align[holder.frame]
     logger.debug('Jitter: {0}'.format(jt))
-    logger.info('test {0}: {1}, {2}, {3}'.format(id(holder), id(holder.align), id(jt), holder.path))
     if img.ndim == 2:
         return img[jt[0]:jt[1], jt[2]:jt[3]]
     if img.ndim == 3:
