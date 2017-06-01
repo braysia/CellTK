@@ -5,8 +5,7 @@ from glob import glob
 import logging
 from logging import FileHandler, StreamHandler
 import yaml
-# from multiprocessing import Pool
-from joblib import Parallel, delayed
+import multiprocessing
 from utils.file_io import make_dirs
 
 logger = logging.getLogger(__name__)
@@ -122,7 +121,9 @@ def main():
     if len(args.input) > 1:
         num_cores = args.cores
         print str(num_cores) + ' started parallel'
-        Parallel(n_jobs=num_cores)(delayed(single_call)(i) for i in args.input)      
+        pool = multiprocessing.Pool(num_cores, maxtasksperchild=1)
+        pool.map(single_call, args.input, chunksize=1)
+        pool.close()
 
 if __name__ == "__main__":
     main()
