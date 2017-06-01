@@ -5,18 +5,12 @@ import types
 from segment import caller as segment_caller
 import importlib
 from os.path import join, isdir, exists
-import preprocess, segment, track, postprocess, subdetect, apply
-import preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation
 from glob import glob
 from joblib import Parallel, delayed
 import logging
 import yaml
 
 logger = logging.getLogger(__name__)
-
-
-ops_modules = [preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation, apply]
-caller_modules = [preprocess, segment, track, postprocess, subdetect, apply]
 
 
 def extract_path(path):
@@ -46,7 +40,6 @@ def prepare_path_list(inputs, outputdir):
     return in0
 
 
-
 def retrieve_in_list(obj, key, empty=[]):
     if isinstance(obj, dict):
         obj = [obj, ]
@@ -69,6 +62,11 @@ def parse_operation(operation):
 
 
 def _retrieve_caller_based_on_function(function):
+    import preprocess, segment, track, postprocess, subdetect, apply
+    import preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation
+    ops_modules = [preprocess_operation, segment_operation, track_operation, postprocess_operation, subdetect_operation, apply]
+    caller_modules = [preprocess, segment, track, postprocess, subdetect, apply]
+
     module = [m for m, top in zip(caller_modules, ops_modules) if hasattr(top, function)][0]
     return getattr(module, "caller")
 
