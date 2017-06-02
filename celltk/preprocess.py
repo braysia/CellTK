@@ -42,6 +42,7 @@ def main():
 
     if args.functions is None:
         print help(preprocess_operation)
+        return
 
     params = ParamParser(args.param).run()
     args.input = parse_image_files(args.input)

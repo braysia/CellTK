@@ -77,6 +77,7 @@ def main():
 
     if args.functions is None:
         print help(postprocess_operation)
+        return
 
     params = ParamParser(args.param).run()
     holder.args = args

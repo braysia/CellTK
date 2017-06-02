@@ -60,17 +60,13 @@ def main():
                         type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="*", default=None)
     parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
-    # parser.add_argument("-r", "--radius", help="minimum and maximum radius", nargs=2, default=[3, 50])
-    # parser.add_argument("--open", help="OPENING parameters", nargs=1, default=2)
     args = parser.parse_args()
 
-    # RADIUS = args.radius
-
     params = ParamParser(args.param).run()
-    # args.radius = [float(i) for i in args.radius]
 
     if args.functions is None:
         print help(segment_operation)
+        return
 
     holder.args = args
     args.input = parse_image_files(args.input)

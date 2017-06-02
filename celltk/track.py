@@ -64,6 +64,7 @@ def main():
 
     if args.functions is None:
         print help(track_operation)
+        return
 
     params = ParamParser(args.param).run()
     holder.args = args
