@@ -2,7 +2,7 @@
 
 Caller Example:
 ```
-python celltk/caller.py input_files/ktr_inputs/input_anisoinh.py
+celltk input_files/ktr_inputs/input_anisoinh.yml
 ```
 
 
@@ -45,8 +45,18 @@ Currently there are five major processes.
 4. tracking
 5. postprocess
 
-For each processes, you can find two modules in celltk (e.g. preprocess.py and preprocess_operations.py).  
+For each processes, you can find two modules in celltk (e.g. preprocess.py and preprocess_operations.py). 
 The *\*_operations.py* file contains a list of functions, which they take an input image and transform it. 
+
+You can quickly check functions available by typing the following commands:
+```
+celltk-preprocess
+celltk-segment
+celltk-subdetect
+celltk-tracking
+celltk-postprocess
+```
+
 
 Two major data types recurrently used are "img" and "labels".  
 img: np.ndarray[np.float32]  
@@ -56,8 +66,8 @@ Each processes have an input and output of a certain data type.
 1. preprocess: img -> img
 2. segment: img -> labels
 3. subdetect: labels (and img) -> labels
-4. tracking: labels -> labels
-5. postprocess: labels -> labels
+4. tracking: labels -> labels (where tracked objects have the same value over time)
+5. postprocess: labels -> labels (where tracked objects have the same value over time)
 
 
 
