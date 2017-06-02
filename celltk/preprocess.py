@@ -11,13 +11,13 @@ from utils.file_io import make_dirs, imsave
 from utils.util import imread
 from utils.parser import ParamParser, parse_image_files
 import logging
+from utils.global_holder import holder
+import preprocess_operation
 
 logger = logging.getLogger(__name__)
 
 
 def caller(inputs, output, functions, params):
-    from utils.global_holder import holder
-    import preprocess_operation
     holder.inputs = inputs
     make_dirs(output)
 
