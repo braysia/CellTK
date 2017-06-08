@@ -1,5 +1,5 @@
 from utils.traces import TracesController
-from utils.pairwise import one_to_one_assignment
+from utils.pairwise import one_to_one_assignment, one_to_two_assignment
 import numpy as np
 from utils.traces import construct_traces_based_on_next, convert_traces_to_storage, label_traces
 np.random.seed(0)
@@ -63,3 +63,38 @@ def cut_short_traces(cells, minframe=4):
         if max(frames) - min(frames) >= minframe:
             store.append(trace)
     return convert_traces_to_storage(store)
+
+
+def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
+    '''
+    '''
+    traces = construct_traces_based_on_next(cells)
+    trhandler = TracesController(traces)
+    for trace in trhandler.traces[:]:
+        if len(trace) < 2:
+            trhandler.traces.remove(trace)
+
+    dist = trhandler.pairwise_dist()
+    massdiff = trhandler.pairwise_mass()
+    framediff = trhandler.pairwise_frame()
+    half_massdiff = massdiff + 0.5
+
+    withinarea = dist < DISPLACEMENT
+    inframe = (framediff <= maxgap) * (framediff >= 1)
+    halfmass = abs(half_massdiff) < DIVISIONMASSERR
+
+    withinarea_inframe_halfmass = withinarea * inframe * halfmass
+
+    # CHECK: now based on distance.
+    par_dau = one_to_two_assignment(withinarea_inframe_halfmass, half_massdiff)
+    # CHECK: If only one daughter is found ignore it.
+    par_dau[par_dau.sum(axis=1) == 1] = False
+
+    if par_dau.any():
+        disapp_idx, app_idx = np.where(par_dau)
+
+        for disi, appi in zip(disapp_idx, app_idx):
+            dis_cell = trhandler.disappeared()[disi]
+            app_cell = trhandler.appeared()[appi]
+            app_cell.parent = dis_cell.label
+    return convert_traces_to_storage(trhandler.traces)

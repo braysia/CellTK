@@ -11,7 +11,7 @@ import numpy as np
 import os
 import track_operation
 import ast
-from utils.file_io import make_dirs, imsave
+from utils.file_io import make_dirs, imsave, lbread
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
@@ -32,10 +32,10 @@ def neg2poslabels(labels):
 
 def caller(inputs, inputs_labels, output, functions, params):
     make_dirs(output)
-    img0, labels0 = imread(inputs[0]), tiff.imread(inputs_labels[0]).astype(np.int16)
+    img0, labels0 = imread(inputs[0]), lbread(inputs_labels[0])
     tiff.imsave(join(output, basename(inputs[0])), labels0.astype(np.int16))
     for holder.frame, (path, pathl) in enumerate(zip(inputs[1:], inputs_labels[1:])):
-        img1, labels1 = imread(path), tiff.imread(pathl).astype(np.int16)
+        img1, labels1 = imread(path), lbread(pathl)
         tiff.imsave('temp.tif', labels1.astype(np.int16))
         labels1 = -labels1
 
