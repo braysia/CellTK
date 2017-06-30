@@ -20,17 +20,17 @@ def extract_path(path):
 
 def prepare_path_list(inputs, outputdir):
     if isinstance(inputs, str):
-        in0 = glob(inputs)
+        in0 = sorted(glob(inputs))
         if not in0:
-            in0 = glob(join(outputdir, inputs))
+            in0 = sorted(glob(join(outputdir, inputs)))
         if isdir(in0[0]):
-            in0 = glob(join(in0[0], '*'))
+            in0 = sorted(glob(join(in0[0], '*')))
     elif isinstance(inputs, list):
         if all([exists(i) for i in inputs]):
             return inputs
-        in0 = zip(*[glob(i) for i in inputs])
+        in0 = zip(*[sorted(glob(i)) for i in inputs])
         if not in0:
-            in0 = zip(*[glob(join(i, '*')) for i in inputs])
+            in0 = zip(*[sorted(glob(join(i, '*'))) for i in inputs])
         if not in0:
             in0 = zip(*[extract_path(join(outputdir, i)) for i in inputs])
         # if not in0:
@@ -72,6 +72,8 @@ def _retrieve_caller_based_on_function(function):
 def run_operation(output_dir, operation):
     functions, params, images, labels, output = parse_operation(operation)
     inputs = prepare_path_list(images, output_dir)
+    logger.info(inputs)
+
     inputs_labels = prepare_path_list(labels, output_dir)
     output = join(output_dir, output) if output else output_dir
     caller = _retrieve_caller_based_on_function(functions[0])
@@ -99,23 +101,28 @@ def load_yaml(path):
 
 def single_call(inputs):
     contents = load_yaml(inputs)
+    call_operations(contents)
 
+
+def call_operations(contents):
     make_dirs(contents['OUTPUT_DIR'])
     logging.basicConfig(filename=join(contents['OUTPUT_DIR'], 'log.txt'), level=logging.DEBUG)
     logging.getLogger("PIL").setLevel(logging.WARNING)
-
-    logger.debug('INPUT:\n{0}'.format(inputs))
     run_operations(contents['OUTPUT_DIR'], contents['operations'])
     logger.info("Caller finished.")
 
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", "--cores", help="number of cores for multiprocessing",
                         type=int, default=1)
     parser.add_argument("input", nargs="*", help="input argument file path")
     args = parser.parse_args()
+    return args
 
+
+def main():
+    args = parse_args()
     if len(args.input) == 1:
         single_call(args.input[0])
     if len(args.input) > 1:
