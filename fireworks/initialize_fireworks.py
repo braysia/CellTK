@@ -7,17 +7,22 @@ def main():
 
     home = os.environ["HOME"]
 
-    logdir_launchpad = raw_input("Launchpad logging directory (e.g. %s): " % os.path.join(home, "fw", "logs", "launchpad"))
-    db_host = raw_input("Database host (e.g., x.mongolab.com): ")
+    db_host = raw_input("Database host (e.g., ds123456.mlab.com): ")
     db_name = raw_input("Database name (e.g., celltk): ")
     db_username = raw_input("Database username (e.g., fireworks): ")
     db_password = raw_input("Database password (stored in plaintext, unfortunately): ")
-    db_port = raw_input("Database port: ")
+    db_port = raw_input("Database port (e.g. 99999 from ds123456.mlab.com:99999/celltk): ")
 
-    logdir_qadapter = raw_input("Queue adapter logging directory (e.g. %s): " % os.path.join(home, "fw", "logs", "qadapter"))
     celltk_path = raw_input("celltk path (e.g., %s): " % os.path.join(home, "CellTK"))
+    logdir_launchpad = raw_input("Launchpad logging directory (default. %s): " % os.path.join(home, "fw", "logs", "launchpad"))
+    logdir_qadapter = raw_input("Queue adapter logging directory (default. %s): " % os.path.join(home, "fw", "logs", "qadapter"))
 
-    template_my_launchpad = os.path.join(celltk_path, "fireworks", "template", "my_launchpad.yaml")
+    if logdir_launchpad == "":
+        logdir_launchpad = os.path.join(home, "fw", "logs", "launchpad")
+    if logdir_qadapter == "":
+        logdir_qadapter = os.path.join(home, "fw", "logs", "qadapter")
+
+    template_my_launchpad = os.path.join(celltk_path, "fireworks", "template", "my_launchpad.yaml.template")
     my_launchpad = os.path.join(celltk_path, "fireworks", "my_launchpad.yaml")
 
     os.makedirs(logdir_launchpad)
@@ -40,7 +45,7 @@ def main():
     h.write(my_launchpad_text)
     h.close()
 
-    template_my_qadapter = os.path.join(celltk_path, "fireworks", "template", "my_qadapter.yaml")
+    template_my_qadapter = os.path.join(celltk_path, "fireworks", "template", "my_qadapter.yaml.template")
     my_qadapter = os.path.join(celltk_path, "fireworks", "my_qadapter.yaml")
 
     h = open(template_my_qadapter, "r")
