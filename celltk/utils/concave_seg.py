@@ -340,6 +340,8 @@ class CellCutter(object):
                 continue
             # scoring
             for n2, c in enumerate(cand_rps):
+                # If you get an error here, it might be unresolved error of scikit-image. https://github.com/scikit-image/scikit-image/issues/1470
+                # edit _regionprops._RegionProperties.moments and moments_central from "astype(np.uint8)" to "astype(np.float)"
                 if c.minor_axis_length > 1:
                     c.n1, c.n2 = n1, n2
                     c.cut_coords = (startpt, endpt)
