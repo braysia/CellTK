@@ -1,5 +1,5 @@
-OUTPUT_DIR: /scratch/PI/mcovert/kudo/CellTK/output/IL1B/
-PARENT_INPUT: /scratch/PI/mcovert/kudo/CellTK/data/test_il1b
+OUTPUT_DIR: <PATHtoOUTPUT>/output/IL1B/
+PARENT_INPUT: <PATHtoCellTK>/CellTK/data/test_il1b
 
 operations:
 - function: align
