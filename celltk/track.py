@@ -36,7 +36,6 @@ def caller(inputs, inputs_labels, output, functions, params):
     tiff.imsave(join(output, basename(inputs[0])), labels0.astype(np.int16))
     for holder.frame, (path, pathl) in enumerate(zip(inputs[1:], inputs_labels[1:])):
         img1, labels1 = imread(path), lbread(pathl)
-        tiff.imsave('temp.tif', labels1.astype(np.int16))
         labels1 = -labels1
 
         for fnum, (function, param) in enumerate(zip(functions, params)):
@@ -44,6 +43,7 @@ def caller(inputs, inputs_labels, output, functions, params):
             if not (labels1 < 0).any():
                 continue
             labels0, labels1 = func(img0, img1, labels0, -labels1, **param)
+            logger.debug('\t{0} with {1}: {2}'.format(function, param, len(set(labels1[labels1 < 0]))))
 
         logger.info("\tframe {0}: {1} objects linked and {2} unlinked.".format(holder.frame,
                     len(set(labels1[labels1 > 0])), len(set(labels1[labels1 < 0]))))

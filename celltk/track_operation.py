@@ -19,6 +19,10 @@ from utils.track_utils import _find_best_neck_cut, _update_labels_neck_cut
 from utils.global_holder import holder
 from scipy.ndimage import gaussian_laplace, binary_dilation
 from utils.binary_ops import grey_dilation
+import logging
+
+logger = logging.getLogger(__name__)
+
 np.random.seed(0)
 
 
@@ -48,6 +52,7 @@ def nn_closer(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.25):
 
     if not rps0 or not rps1:
         return labels0, labels
+
     dist = cdist([i.centroid for i in rps0], [i.centroid for i in rps1])
     massdiff = calc_massdiff(rps0, rps1)
     binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)
@@ -86,7 +91,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
     # dist[abs(massdiff) > MASSTHRES] = np.Inf
     cost = dist
     if cost.shape[0] == 0 or cost.shape[1] == 0:
-        return labels1
+        return labels0, labels
 
     # Define initial costBorn and costDie in the first frame
     if not hasattr(holder, 'cost_born') or not hasattr(holder, 'cost_die'):
@@ -134,15 +139,16 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     CANDS_LIMIT = 300
     labels = -labels1.copy()
 
+    if (labels <= 0).all():
+        print 111
+        return labels0, labels1
+
     if not hasattr(holder, "SMALL_RAD") and not hasattr(holder, "LARGE_RAD"):
         tracked_area = [i.area for i in regionprops(labels)]
-        LARGE_RAD = np.sqrt(max(tracked_area)/np.pi)
-        SMALL_RAD = np.sqrt(np.percentile(tracked_area, 5)/np.pi)
-        holder.LARGE_RAD = LARGE_RAD
-        holder.SMALL_RAD = SMALL_RAD
-    else:
-        SMALL_RAD = holder.SMALL_RAD
-        LARGE_RAD = holder.LARGE_RAD
+        holder.LARGE_RAD = np.sqrt(max(tracked_area)/np.pi)
+        holder.SMALL_RAD = np.sqrt(np.percentile(tracked_area, 5)/np.pi)
+    SMALL_RAD = holder.SMALL_RAD
+    LARGE_RAD = holder.LARGE_RAD
 
     rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)

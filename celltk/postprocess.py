@@ -76,7 +76,7 @@ def caller(inputs, inputs_labels, output, functions, params):
 
     logger.info('\tsaving images...')
     for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
-        labels = cells2labels(cells, frame, imread(pathl))
+        labels = cells2labels(cells, frame, lbread(pathl))
         imsave(labels, output, path, dtype=np.int16)
 
 
@@ -94,6 +94,7 @@ def main():
         return
 
     params = ParamParser(args.param).run()
+    params = [{}, {}]  # FIXME
     holder.args = args
 
     caller(args.input, args.labels, args.output, args.functions, params)
