@@ -1,23 +1,38 @@
 
+## Image Analysis
+ 
+As mentioned, we use CellTK to extract single-cell level properties over time from the image stacks. The software combines several algorithms from custom-made or existing python modules in order to perform tasks such as preprocessing, segmentation and tracking2,3. The software is available at https://github.com/braysia/CellTK. 
+ 
+1. Install Docker (https://www.docker.com/). If your machine is Windows 7 (or previous), we recommend using VirtualBox (https://www.virtualbox.org/) to install Ubuntu 16.04.1 or later.
+2. Install and run the docker image for this protocol. This will install all of the required softwares and packages.  An empty working directory should be specified by users, referred to here as $WORKDIR.  Open a terminal and type the following commands:
+    ```
+    docker pull braysia/ktr
+    docker run -it -p 8888:8888 -v $WORKDIR:/home/ braysia/ktr
+    ```
+3.  Download and extract the image datasets.
+	wget http://archive.simtk.org/ktrprotocol/KTRimages.zip && unzip KTRimages.zip
+The extracted folder contains image files of the NIH 3T3 cells corresponding to Table S2, which is a published experiment4. 
+4. Download and extract the configuration files for image processing and jupyter notebooks files.
+    ```
+	wget http://archive.simtk.org/ktrprotocol/ktr_misc_files.zip && unzip ktr_misc_files.zip
+    ```
+5. Run CellTK. The runtime is about one hour using 3 cores of the 2.2-GHz Intel Core i7 MacBook Air. The integer after “-n” can be substituted to any numbers of cores for parallelization. The output will appear in “/home/output” in the docker environment or the mounted working directory, “$WORKDIR/output”.
+    ```
+	celltk -n 3 input_files/ktr_inputs/input_*yml
+    ```
+    In order to deal with many kinds of imaging problems, users choose and combine functions to use from a list of functions in CellTK. The “input_*.yml” files contain the list of algorithms and tuned parameters for analyzing each image stack we provide. Table S3 provides an overview and explanation of the workflow.
+ 
+## Data cleaning and Modeling
+In this section, we use covertrace in a jupyter notebook for handling multi-dimensional time-series data. The software is also available at https://github.com/braysia/covertrace. 
+1. After tracking, initialize a jupyter notebook. 
+    ```
+    jupyter notebook
+    ```
+    Copy and paste the link (http://localhost:8888/?token=~) in a browser.
+2. Open the extracted “/home/ktr_datacleaning.ipynb”. Execute all the analysis steps contained in cells. See http://jupyter.readthedocs.io/en/latest/index.html for how to execute jupyter notebooks.
+ 
+3. Open “/home/ktr_modeling.ipynb”. The single-cell level active JNK concentration will be obtained as a final output (Figure S2).
+ 
+Optional: You can read the jupyter notebooks without running them, visit https://github.com/braysia/covertrace/tree/master/doc/jupyter_examples
 
-#### Passing multiple channel sets: Align (Registration)
-Typically the operation is only applied to single channel. For a jitter correction, you use single channel to calculate jitters and applied to multiple channels.  
-To pass multiple channel sets, use " / " for separation of path after _-i_.
-
-The following example uses CFP channel to calculate jitters and applied to CFP, TRITC and Far-red images. All the channels need to have the same number of images.
-
-```
-python celltk/preprocess.py -f align -i data/testimages4/imCFP* / data/testimages4/imTRITC* / data/testimages4/imFar-red* -p DOWN=2
-```
-
-#### Passing multiple parameters: multiple tracking
-In track.py, at each frame, it attempts to link object from previous frame, typically using information about intensity and location.
-If there are objects remained unlinked after the first attempt, they can be passed to the next tracking algorithm.  
-In the following example, three methods are applied for tracking, which are "run_lap", "track_neck_cut" and another "track_neck_cut". To pass parameters for multiple functions, you need to separate them by " / ".  
-e.g. the last "track_neck_cut" uses THRES_ANGLE=160.
-
-
-```
-python celltk/track.py -i d0/img_00000000* -l d1/img_00000000* -f run_lap track_neck_cut track_neck_cut -p DISPLACEMENT=50 MASSTHRES=0.25 / DISPLACEMENT=30 THRES_ANGLE=180 /  THRES_ANGLE=160
-```
 

@@ -4,7 +4,7 @@ Caller Example:
 ```
 celltk input_files/ktr_inputs/input_anisoinh.yml
 ```
-
+This YAML file contains a choice of algorithms and parameters.
 
 Commandline Example:
 ```
@@ -36,6 +36,8 @@ docker pull braysia/celltk
 docker run -it -v /folder_you_want_to_mount:/home/ braysia/celltk
 ```
 Add "-p 8888:8888" for running jupyter notebook from the docker image.
+
+To run the analysis with sample images, you can see the procedures [here](doc/EXAMPLE.md).
 
 ## Processes
 Currently there are five major processes.
