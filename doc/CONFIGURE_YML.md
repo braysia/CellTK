@@ -21,7 +21,7 @@ Each operation contains ___function___, ___images (and/or labels)___ , ___output
 
 ### function and params
 The ___celltk\/\*\_operations.py___ modules contains a list of functions, which they take an input image and transform it.  
-___function___ is simply a function from these modules. You can find a function called ___flatfield\_refernces___ in ___celltk/preprocess\_operations.py___; ___ff_paths___ is an argument for this function.
+___function___ is simply a function name from these modules. You can find a function called ___flatfield\_refernces___ in ___celltk/preprocess\_operations.py___; ___ff_paths___ is an argument for this function.
 
 You can quickly check available functions by typing one of the following commands:
 ```
@@ -58,7 +58,7 @@ Operations can also be specified as a nested sequence instead of a sequence.
 
 In this case, it takes a series of images from op0, apply functions  example0 to example2, and finally save the transformed images in op1 folder. Note that images and output are specified only in the first and last operation, respectively.  
 
-Typically, tracking uses this syntax so that it enables incremental tracking with several algorithms. Objects which could not be tracked by the first algorithm are passed to the second algorithm and so on.  
+Typically, tracking uses this syntax so that it enables an incremental tracking with several algorithms. Objects which could not be tracked by the first algorithm are passed to the second algorithm, and so on.  
 Tracking e.g.
 ```
 - - function: run_lap
@@ -76,5 +76,10 @@ Tracking e.g.
 ```
 In this example, cells are first attempted for tracking with ___run_lap___; cells that were not linked by ___run_lap___ is then passed to ___track_neck_cut___ with _THRES_ANGLE: 180_, and whatever left is finally passed to ___track_neck_cut___ with _THRES_ANGLE: 160_.  
 In general, order tracking algorithms from conservative to more radical algorithms.
+
+
+All the processes described so far are the image conversion/transformation. For example, segmentation is the process to convert img to labels. Even tracking is the process to convert labels to a specific type of labels that each objects has consistent values over time.
+
+At the end, however, we want to extract vectors or arrays representing extracted parameters. This is implemented through apply.
 
 
