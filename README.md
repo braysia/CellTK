@@ -1,75 +1,53 @@
 # CellTK
 
-Caller Example:
+Live-cell analysis toolkit.
+
+Image processing is simply an image conversion/transformation process.  
+CellTK has the following five major processes which all implement conversion between img and labels.
+
+1. preprocessing:   img -> img
+2. segmentation:   img -> labels
+3. subdetection: labels (and img) -> labels
+4. tracking: labels -> labels*
+5. postprocessing: labels -> labels*
+
+where  
+- img: np.ndarray[np.float32] (e.g. a raw image from a microscope)
+- labels: np.ndarray[np.int16] (e.g. nuclear objects)  
+\* tracked objects have consistent values over frames
+
+For each processes, you can find a module named ___\*\_operation.py___. (e.g. _celltk/preprocess_operations.py_).  
+These files simply contain a list of functions which takes an input and convert images.
+
+#### Command line Example:
+The simplest way to apply a function is to use ___command.py___.
+
 ```
-celltk input_files/ktr_inputs/input_anisoinh.yml
+python celltk/command.py -i data/testimages0/CFP/img* -f constant_thres -p THRES=2000 -o output/c1
+
+python celltk/command.py -i data/testimages0/CFP/img* -l output/c1/img* -f run_lap track_neck_cut -o output/nuc
 ```
-This YAML file contains a choice of algorithms and parameters.
 
-Commandline Example:
+___-i___ for images path, ___-l___ for labels path, ___-o___ for output directory, ___-f___ for function name from ___*operation.py___, ___-p___ for arguments to the function.
+
+
+#### Caller Example:
 ```
-python celltk/segment.py -i data/testimages0/CFP/img* -f constant_thres -p THRES=2000 -o output/c1
-
-python celltk/track.py -i data/testimages0/CFP/img* -l output/c1/img* -f run_lap track_neck_cut -o output/nuc
-
-python celltk/postprocess.py -i data/testimages0/CFP/img* -l output/c2/img* -f gap_closing -o output/nuc
-
-python celltk/subdetect.py -l output/nuc/img* -f ring_dilation -o output/cyto
-
-python celltk/apply.py -i data/testimages0/CFP/img* -l output/nuc/img* -o output/array.npz
-
-python celltk/apply.py -i data/testimages0/YFP/img* -l output/nuc/img* -o output/array.npz
-
-python celltk/apply.py -i data/testimages0/YFP/img* -l output/cyto/img* -o output/array.npz
+python celltk/caller.py input_files/ktr_inputs/input_anisoinh.yml
 ```
-_-i_ for images path, _-l_ for labels path, _-o_ for output directory, _-f_ for function name from *operation.py, _-p_ for arguments to the function.
-
 The output can be loaded with LabeledArray class. e.g.
 ```
 python -c "from celltk.labeledarray import LabeledArray;arr = LabeledArray().load('output/array.npz');print arr.labels;print arr['CFP', 'nuc', 'x']"
 ```
 
-
-## Running Docker
+## Running Docker Container
 ```
 docker pull braysia/celltk
-docker run -it -v /folder_you_want_to_mount:/home/ braysia/celltk
+docker run -it -v /$FOLDER_TO_MOUNT:/home/ braysia/celltk
 ```
-Add "-p 8888:8888" for running jupyter notebook from the docker image.
+Please modify $FOLDER_TO_MOUNT, like `docker run -it -v /Users/kudo/example:/home/ braysia/celltk`.
 
-To run the analysis with sample images, you can see the procedures [here](doc/EXAMPLE.md).
-
-## Processes
-Currently there are five major processes.
-1. preprocess
-2. segment
-3. subdetect
-4. tracking
-5. postprocess
-
-For each processes, you can find two modules in celltk (e.g. preprocess.py and preprocess_operations.py). 
-The *\*_operations.py* file contains a list of functions, which they take an input image and transform it. 
-
-You can quickly check functions available by typing the following commands:
-```
-celltk-preprocess
-celltk-segment
-celltk-subdetect
-celltk-tracking
-celltk-postprocess
-```
-
-
-Two major data types recurrently used are "img" and "labels".  
-img: np.ndarray[np.float32]  
-labels: np.ndarray[np.int16]
-
-Each processes have an input and output of a certain data type.  
-1. preprocess: img -> img
-2. segment: img -> labels
-3. subdetect: labels (and img) -> labels
-4. tracking: labels -> labels (where tracked objects have the same value over time)
-5. postprocess: labels -> labels (where tracked objects have the same value over time)
+You can add "-p 8888:8888" for running jupyter notebook from the docker image.
 
 
 
