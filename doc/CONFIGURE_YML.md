@@ -37,7 +37,7 @@ celltk-postprocess
 
 #### Lazy syntax  
 For specifying a series of image files, you may use file names specified by wildcards or a folder containing the files (either relative or absolute). Whenever you use the relative path, it will look for a path under OUTPUT_DIR.   
-For example, imagine you have two files as _/home/op/img0.tif_ and _/home/op/img1.tif_. If `OUTPUT_DIR: /home/example/`, then any of the following syntaxes can be used to take these images as input:
+For example, imagine you have two files as _/home/example/op/img0.tif_ and _/home/example/op/img1.tif_. If `OUTPUT_DIR: /home/example/`, then any of the following syntaxes can be used to take these images as input:
 ```
 images: /home/example/op/img*.tif
 images: /home/example/op
