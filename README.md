@@ -45,11 +45,11 @@ python celltk/caller.py input_files/input_tests1.yml
 
 This configuration file contains operations defined like this:
 ```
-- function: example_thres
+- function: constant_thres
   images: /example/img_00*.tif
   output: output_0
   params:
-    THRES: 50
+    THRES: 500
 ```
 
 You can find how to set up a configuration file [here](doc/CONFIGURE_YML.md).
