@@ -16,8 +16,11 @@ where
 - labels: np.ndarray[np.int16] (e.g. nuclear objects)  
 \* tracked objects have consistent values over frames
 
-For each processes, you can find a module named ___\*\_operation.py___. (e.g. _celltk/preprocess_operations.py_).  
-These files simply contain a list of functions which takes an input and convert images.  
+For each processes, you can find a module named ___\*\_operation.py___. (e.g. _celltk/preprocess_operations.py_).    
+
+These files are the "repositories" of functions.  
+They simply contain a list of functions which takes an input and convert images. If you need a new function, simply add it to here.
+
   
 When you input a raw image, it should take TIFF or PNG files with various datatypes as well.
 
