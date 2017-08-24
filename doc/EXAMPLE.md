@@ -12,7 +12,9 @@ As mentioned, we use CellTK to extract single-cell level properties over time fr
     _-p 8888:8888_ is required only if you are running a jupyter notebook.  
 
 3.  Download and extract the image datasets.
+    ```
 	wget http://archive.simtk.org/ktrprotocol/KTRimages.zip && unzip KTRimages.zip
+    ```
 The extracted folder contains image files of the NIH 3T3 cells with JNK KTR, which is a published experiment. 
 4. Download and extract the configuration files for image processing and jupyter notebooks files.
     ```
