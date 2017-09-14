@@ -9,7 +9,9 @@ from os.path import basename, join
 import numpy as np
 import postprocess_operation
 from utils.postprocess_utils import regionprops, Cell # set default parent and next as None
-from utils.file_io import make_dirs, imsave
+from utils.file_io import make_dirs, imsave, lbread
+from utils.filters import labels2outlines
+from scipy.ndimage import binary_dilation
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
@@ -26,12 +28,24 @@ def neg2poslabels(labels):
     return labels
 
 
-def cells2labels(cells, frame, shape):
+def cells2labels0(cells, frame, shape):
     inframe = [i for i in cells if i.frame == frame]
     template = np.zeros(shape)
     for cell in inframe:
         for c0, c1 in cell.coords:
             template[c0, c1] = cell.label
+    return template
+
+
+def cells2labels(cells, frame, labels):
+    inframe = [i for i in cells if i.frame == frame]
+    template = np.zeros(labels.shape)
+    for cell in inframe:
+        for c0, c1 in cell.coords:
+            template[c0, c1] = cell.label
+        if cell.parent is not None:
+            outline = labels2outlines(binary_dilation(template == cell.label))
+            template[outline > 0] = -cell.parent
     return template
 
 
@@ -42,7 +56,7 @@ def caller(inputs, inputs_labels, output, functions, params):
     logger.info('Postprocess.\tcollecting cells...')
     store = []
     for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
-        img, labels = imread(path), tiff.imread(pathl).astype(np.int16)
+        img, labels = imread(path), lbread(pathl)
         cells = regionprops(labels, img)
         cells = [Cell(cell) for cell in cells]
         for cell in cells:
@@ -62,7 +76,7 @@ def caller(inputs, inputs_labels, output, functions, params):
 
     logger.info('\tsaving images...')
     for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
-        labels = cells2labels(cells, frame, imread(path).shape)
+        labels = cells2labels(cells, frame, lbread(pathl))
         imsave(labels, output, path, dtype=np.int16)
 
 
@@ -80,6 +94,7 @@ def main():
         return
 
     params = ParamParser(args.param).run()
+    params = [{}, {}]  # FIXME
     holder.args = args
 
     caller(args.input, args.labels, args.output, args.functions, params)

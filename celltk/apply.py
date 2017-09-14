@@ -16,9 +16,11 @@ try:
 except:
     from celltk.labeledarray import LabeledArray
 from os.path import exists
-from utils.file_io import make_dirs
+from utils.file_io import make_dirs, lbread
 import pandas as pd
 import logging
+from scipy.ndimage.morphology import binary_fill_holes
+from scipy.ndimage.morphology import binary_dilation
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,32 @@ logger = logging.getLogger(__name__)
 PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
              'eccentricity', 'major_axis_length', 'minor_axis_length', 'max_intensity',
              'mean_intensity', 'median_intensity', 'min_intensity', 'orientation',
-             'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y']
+             'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', 'parent']
+
+
+def find_all_children(labels):
+
+    mask = binary_fill_holes(labels < 0)
+    mask[labels < 0] = False
+    return np.unique(labels[mask]).tolist()
+
+
+def find_parent_label(labels, child_label):
+    mask = binary_dilation(labels == child_label)
+    mask[labels == child_label] = False
+    assert len(np.unique(labels[mask])) == 1
+    return labels[mask][0]
+
+
+def add_parent(cells, labels):
+    children_labels = find_all_children(labels)
+    for cl in children_labels:
+        parent_label = find_parent_label(labels, cl)
+        child = [cell for cell in cells if cell.label == cl]
+        assert len(child) == 1
+        child[0].parent = abs(parent_label)
+    return cells
+
 
 
 # def add_parent_id(labels, img, cells):
@@ -83,8 +110,10 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
         for inputs_labels, obj in zip(inputs_labels_list, obj_names):
             logger.info("Channel {0}: {1} applied...".format(ch, obj))
             for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
-                img, labels = imread(path), tiff.imread(pathl).astype(np.int32)
+                img, labels = imread(path), lbread(pathl, nonneg=False)
                 cells = regionprops(labels, img)
+                if (labels < 0).any():
+                    cells = add_parent(cells, labels)
                 [setattr(cell, 'frame', frame) for cell in cells]
                 cells = [Cell(cell) for cell in cells]
                 store.append(cells)

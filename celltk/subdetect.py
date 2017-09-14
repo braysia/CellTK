@@ -9,7 +9,7 @@ from os.path import basename, join
 import numpy as np
 import subdetect_operation
 from itertools import izip_longest
-from utils.file_io import make_dirs, imsave
+from utils.file_io import make_dirs, imsave, lbread
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
@@ -25,7 +25,7 @@ def caller(inputs, inputs_labels, output, functions, params):
     for holder.frame, (path, pathl) in enumerate(izip_longest(inputs, inputs_labels)):
         if path is not None:
             img = imread(path)
-        labels0 = tiff.imread(pathl).astype(np.int16)
+        labels0 = lbread(pathl)
         for function, param in zip(functions, params):
             func = getattr(subdetect_operation, function)
             if img is not None:

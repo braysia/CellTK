@@ -14,7 +14,7 @@ from utils.filters import interpolate_nan
 from scipy.optimize import minimize
 import logging
 from utils.global_holder import holder
-
+from utils.mi_align import calc_jitters_multiple, calc_crop_coordinates
 
 logger = logging.getLogger(__name__)
 np.random.seed(0)
@@ -79,43 +79,14 @@ def align(img, CROP=0.05):
             inputs = holder.inputs
 
         img0 = imread(inputs[0])
-        shapes = img0.shape
 
         (ch, cw) = [int(CROP * i) for i in img0.shape]
         ch = None if ch == 0 else ch
         cw = None if cw == 0 else cw
 
-        img0 = img0[ch:-ch, cw:-cw]
-        mask = np.ones(img0.shape, np.bool)
-        store = [(0, 0)]
-        for path0, path1 in zip(inputs[:-1], inputs[1:]):
-            img0 = imread(path0)[ch:-ch, cw:-cw]
-            img1 = imread(path1)[ch:-ch, cw:-cw]
-
-            j0, j1, score0 = align_mutual_information(img0, img1, mask, mask)
-
-            """compare it to FFT based alignment and pick the higher mutual info.
-            align_mutual_information can often stack in a local solution.
-            """
-            from utils.mi_align import mutualinf, offset_slice
-            from utils.imreg import translation
-            jj1, jj0 = translation(img0, img1)
-            p2, p1 = offset_slice(img1, img0, jj1, jj0)
-            m2, m1 = offset_slice(mask, mask, jj1, jj0)
-            score1 = mutualinf(p1, p2, m1, m2)
-            if score1 > score0:
-                j0, j1 = jj0, jj1
-            store.append((store[-1][0] + j0, store[-1][1] + j1))
-
-        max_w = max(i[0] for i in store)
-        start_w = [max_w - i[0] for i in store]
-        size_w = min([shapes[1] + i[0] for i in store]) - max_w
-        max_h = max(i[1] for i in store)
-        start_h = [max_h - i[1] for i in store]
-        size_h = min([shapes[0] + i[1] for i in store]) - max_h
-        holder.align = [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
+        jitters = calc_jitters_multiple(inputs, ch, cw)
+        holder.align = calc_crop_coordinates(jitters, img0.shape)
         logger.debug('holder.align set to {0}'.format(holder.align))
-
     jt = holder.align[holder.frame]
     logger.debug('Jitter: {0}'.format(jt))
     if img.ndim == 2:
