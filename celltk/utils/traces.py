@@ -5,7 +5,7 @@ from itertools import izip
 import sys
 from track_utils import calc_massdiff, calc_diff
 from scipy.spatial.distance import cdist
-
+from collections import deque
 
 sys.setrecursionlimit(10000)
 
@@ -78,6 +78,23 @@ def construct_traces_based_on_next(storage):
             cells.append(storage.pop(storage.index(cell)))
         traces.append(cells)
     return traces
+
+
+def construct_traces_based_on_prev(storage):
+    '''
+    '''
+    for cell in storage:
+        cell.nxt.prev = cell.label
+    for cell in storage:
+        cell.prev = cell.parent
+    for cell in reversed(storage):
+        cells = deque([cell])
+        while cell.prev is not None:
+            cell = cell.prev
+            cells.append(storage.pop(storage.index(cell)))
+        traces.append(cells)
+    return traces
+
 
 
 def convert_traces_to_storage(traces):

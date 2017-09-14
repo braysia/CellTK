@@ -73,7 +73,7 @@ def pick_closer_binarycostmat(binarymat, distmat):
 def pick_closer_cost(binarymat, distmat):
     distmat = distmat.astype(np.float)
     bmat = np.zeros(binarymat.shape, np.bool)
-    distmat[-binarymat] = np.Inf
+    distmat[~binarymat] = np.Inf
     true_rows = np.unique(np.where(binarymat)[0])
     for i in true_rows:
         bmat[i, np.argmin(distmat[i, :])] = True

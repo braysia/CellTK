@@ -62,7 +62,7 @@ def labels2outlines(labels):
     """Same functionality with find_label_boundaries.
     """
     outlines = labels.copy()
-    outlines[-find_boundaries(labels)] = 0
+    outlines[~find_boundaries(labels)] = 0
     return outlines
 
 
