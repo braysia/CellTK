@@ -5,7 +5,7 @@ To pass multiple channel sets, use " / " for separation of path after _-i_.
 The following example uses CFP channel to calculate jitters and applied to CFP, TRITC and Far-red images. All the channels need to have the same number of images.
 
 ```
-python celltk/preprocess.py -f align -i data/testimages4/imCFP* / data/testimages4/imTRITC* / data/testimages4/imFar-red* -p DOWN=2
+python celltk/preprocess.py -f align -i data/testimages4/imCFP* / data/testimages4/imTRITC* / data/testimages4/imFar-red* -p CROP=0.1
 ```
 
 #### Passing multiple parameters: multiple tracking
