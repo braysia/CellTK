@@ -10,7 +10,6 @@ import numpy as np
 import scipy
 from skimage.measure import block_reduce
 from scipy.ndimage.filters import gaussian_laplace
-<<<<<<< HEAD
 from skimage.exposure import equalize_adapthist, equalize_hist
 # from utils.imreg import translation
 from scipy.ndimage import imread
@@ -26,22 +25,6 @@ from centrosome.filter import stretch
 #     returns the stretched image
 #     '''
 #     return (image - image.min()) / (image.max() - image.min())
-=======
-from skimage.exposure import equalize_adapthist
-from utils.imreg import translation
-from scipy.ndimage import imread
-from numba.decorators import jit
-
-
-@jit
-def stretch(image):
-    '''Normalize an image to make the minimum zero and maximum one
-    image - pixel data to be normalized
-    mask  - optional mask of relevant pixels. None = don't mask
-    returns the stretched image
-    '''
-    return (image - image.min()) / (image.max() - image.min())
->>>>>>> 1b0659da83a7c88087b6ec4f0927b11d6558c957
 
 
 class BaseMutualInfoAligner(object):
