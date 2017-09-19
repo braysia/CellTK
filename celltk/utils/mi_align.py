@@ -13,7 +13,7 @@ from scipy.ndimage.filters import gaussian_laplace
 from skimage.exposure import equalize_adapthist, equalize_hist
 from utils.imreg import translation
 from scipy.ndimage import imread
-from numba.decorators import jit
+# from numba.decorators import jit
 from centrosome.filter import stretch
 
 
@@ -298,7 +298,7 @@ def offset_slice(pixels1, pixels2, i, j):
     p2 = pixels2[p2_imin:p2_imax, p2_jmin:p2_jmax]
     return p1, p2
 
-@jit
+# @jit
 def call_hist(x):
     _bins = np.linspace(x.min(), x.max(), 257)
     return np.histogram(x, _bins)[0]
