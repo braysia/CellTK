@@ -7,6 +7,7 @@ from logging import FileHandler, StreamHandler
 import yaml
 import multiprocessing
 from utils.file_io import make_dirs
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def extract_path(path):
     return f
 
 
-def prepare_path_list(inputs, outputdir):
+def parse_lazy_syntax(inputs, outputdir):
     if isinstance(inputs, str):
         in0 = sorted(glob(inputs))
         if not in0:
@@ -33,8 +34,16 @@ def prepare_path_list(inputs, outputdir):
             in0 = zip(*[sorted(glob(join(i, '*'))) for i in inputs])
         if not in0:
             in0 = zip(*[extract_path(join(outputdir, i)) for i in inputs])
-        # if not in0:
-        #     in0 = zip(*[glob(join(outputdir, i, '*')) for i in inputs])
+    return in0
+
+
+def prepare_path_list(inputs, outputdir):
+    try:
+        in0 = parse_lazy_syntax(inputs, outputdir)
+    except IndexError:
+        logger.info("Images \"{0}\" not found. Check your path".format(inputs))
+        print "Images \"{0}\" not found. Check your path".format(inputs)
+        sys.exit(1)
     return in0
 
 
