@@ -15,6 +15,8 @@ from scipy.optimize import minimize
 import logging
 from utils.global_holder import holder
 from utils.mi_align import calc_jitters_multiple, calc_crop_coordinates
+from utils.shading_correction import retrieve_ff_ref
+
 
 logger = logging.getLogger(__name__)
 np.random.seed(0)
@@ -154,4 +156,35 @@ def histogram_match(img, BINS=1000, QUANT=100, THRES=False):
         holder.first_img = img
     else:
         img = histogram_matching(img, holder.first_img, BINS, QUANT, THRES)
+    return img
+
+
+def shading_correction(img,
+                       ch='DAPI',
+                       whiteurl='http://archive.simtk.org/ktrprotocol/temp/ffref_20x3bin.npz',
+                       darkurl='http://archive.simtk.org/ktrprotocol/temp/ffdarkref_20x3bin.npz'):
+
+    """only access if it has not"""
+    if hasattr(holder, 'sc_ref'):
+        if ch in holder.sc_ref:
+            ref = holder.sc_ref[ch]
+            darkref = holder.sc_dref[ch]
+        else:
+            ref, darkref = retrieve_ff_ref(whiteurl, darkurl)
+            holder.sc_ref[ch] = ref
+            holder.sc_dref[ch] = darkref
+    else:
+        ref, darkref = retrieve_ff_ref(whiteurl, darkurl)
+        holder.sc_ref, holder.sc_dref = {}, {}
+        holder.sc_ref[ch] = ref
+        holder.sc_dref[ch] = darkref
+
+    def correct_shade(img, ref, darkref, ch):
+        img = img.astype(np.float)
+        d0 = img.astype(np.float) - darkref[ch]
+        d1 = ref[ch] - darkref[ch]
+        d1[d1 < 0] = 0
+        return d1.mean() * d0/d1
+
+    img = correct_shade(img, ref, darkref, ch)
     return img
