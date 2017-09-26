@@ -54,7 +54,7 @@ def main():
 
     my_qadapter_text = t.render({
         "LOGDIR_QADAPTER": logdir_qadapter,
-        "celltk_path": celltk_path,
+        "CELLTK_PATH": os.path.join(celltk_path, "fireworks"),
         })
 
     h = open(my_qadapter, "w")
