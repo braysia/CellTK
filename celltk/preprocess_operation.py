@@ -52,7 +52,7 @@ def n4_illum_correction(img, RATIO=1.5, FILTERINGSIZE=50):
     Takes some calculation time. It first calculates the background using adaptive_thesh.
     """
     bw = adaptive_thresh(img, R=RATIO, FILTERINGSIZE=FILTERINGSIZE)
-    img = homogenize_intensity_n4(img, -bw)
+    img = homogenize_intensity_n4(img, ~bw)
     return img
 
 
@@ -62,7 +62,7 @@ def n4_illum_correction_downsample(img, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OF
     fil = sitk.ShrinkImageFilter()
     cc = sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(img), [DOWN, DOWN]))
     bw = adaptive_thresh(cc, R=RATIO, FILTERINGSIZE=FILTERINGSIZE/DOWN)
-    himg = homogenize_intensity_n4(cc, -bw)
+    himg = homogenize_intensity_n4(cc, ~bw)
     himg = cc - himg
     # himg[himg < 0] = 0
     bias = resize_img(himg, img.shape)
@@ -188,3 +188,22 @@ def shading_correction(img,
 
     img = correct_shade(img, ref, darkref, ch)
     return img
+
+
+def background_subtraction_wavelet(img, level=7, OFFSET=10):
+    '''
+    It might be radical but works in many cases in terms of segmentation.
+    Use "background_subtraction_wavelet_hazen" for a proper implementation.
+    '''
+    from pywt import WaveletPacket2D
+    from skimage.transform import resize
+    def wavelet_subtraction(img, level):
+        """6- 7 level is recommended"""
+        if level == 0:
+            return img
+        wp = WaveletPacket2D(data=img.astype(np.uint16), wavelet='haar', mode='sym')
+        back = resize(np.array(wp['a'*level].data), img.shape, order=3, mode='reflect')/(2**level)
+        img = img - back
+        return img
+    img = wavelet_subtraction(img, level)
+    return convert_positive(img, OFFSET)

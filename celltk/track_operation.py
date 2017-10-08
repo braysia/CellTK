@@ -134,14 +134,10 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     STEPLIM (int):      points of neck needs to be separated by at least STEPLIM in parimeters.
     WSLIMIT (bool):     Limit search points to ones overlapped with watershed transformed images. Set it True if calculation is slow.
     """
-    # labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
-    # labels1 = -labels.copy()
-    CANDS_LIMIT = 300
-    labels = -labels1.copy()
+    labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
+    labels1 = -labels.copy()
 
-    if (labels <= 0).all():
-        print 111
-        return labels0, labels1
+    CANDS_LIMIT = 300
 
     if not hasattr(holder, "SMALL_RAD") and not hasattr(holder, "LARGE_RAD"):
         tracked_area = [i.area for i in regionprops(labels)]
