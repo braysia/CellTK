@@ -5,7 +5,7 @@ TODO:
 need to deal with parent id
 """
 
-from scipy.ndimage import imread
+from utils.util import imread
 import argparse
 import tifffile as tiff
 from os.path import basename, join, dirname, abspath
