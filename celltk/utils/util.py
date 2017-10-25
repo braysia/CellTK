@@ -15,6 +15,9 @@ def imread(path):
         st = []
         for p in path:
             st.append(imread_check_tiff(p))
-        return np.dstack(st)
+        img = np.dstack(st)
+        if img.shape[2] == 1:
+            np.squeeze(img, axis=2)
+        return img
     else:
         return imread_check_tiff(path)

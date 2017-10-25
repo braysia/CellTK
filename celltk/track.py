@@ -3,7 +3,7 @@ python celltk/tracking.py -f nearest_neighbor -i c0/img_00000000* -l c1/img_0000
 0*  -p DISPLACEMENT=10 MASSTHRES=0.2
 """
 
-from scipy.ndimage import imread
+from utils.util import imread
 import argparse
 import tifffile as tiff
 from os.path import basename, join
