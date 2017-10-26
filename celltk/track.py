@@ -33,6 +33,7 @@ def neg2poslabels(labels):
 def caller(inputs, inputs_labels, output, functions, params):
     make_dirs(output)
     img0, labels0 = imread(inputs[0]), tiff.imread(inputs_labels[0]).astype(np.int16)
+    labels0 = neg2poslabels(labels0)
     imsave(labels0, output, basename(inputs[0]), dtype=np.int16)
     for holder.frame, (path, pathl) in enumerate(zip(inputs[1:], inputs_labels[1:])):
         img1, labels1 = imread(path), lbread(pathl)
