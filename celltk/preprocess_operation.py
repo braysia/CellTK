@@ -209,7 +209,7 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
     return convert_positive(img, OFFSET)
 
 
-def arithmetic(img, npfunc='max'):
+def np_arithmetic(img, npfunc='max'):
     func = getattr(np, npfunc)
     return func(img, axis=2)
 
