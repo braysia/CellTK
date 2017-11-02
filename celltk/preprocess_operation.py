@@ -8,7 +8,7 @@ from utils.preprocess_utils import resize_img
 from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen
 from utils.filters import adaptive_thresh
 from utils.cp_functions import align_cross_correlation, align_mutual_information
-from scipy.ndimage import imread
+from utils.util import imread
 from glob import glob
 from utils.filters import interpolate_nan
 from scipy.optimize import minimize
@@ -207,3 +207,9 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
         return img
     img = wavelet_subtraction(img, level)
     return convert_positive(img, OFFSET)
+
+
+def arithmetic(img, npfunc='max'):
+    func = getattr(np, npfunc)
+    return func(img, axis=2)
+

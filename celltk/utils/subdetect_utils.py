@@ -11,7 +11,7 @@ def dilate_sitk(labels, RAD):
     return sitk.GetArrayFromImage(gd.Execute(slabels))
 
 
-def voroi_expand(labels, return_line=False):
+def voronoi_expand(labels, return_line=False):
     dist = distance_transform_edt(labels)
 
     vor = skiwatershed(-dist, markers=labels)
@@ -99,7 +99,7 @@ def dilate_to_cytoring_buffer(labels, RINGWIDTH, MARGIN, BUFFER):
     comp_dilated_nuc = 1e4 - comp_dilated_nuc
     comp_dilated_nuc[comp_dilated_nuc == 1e4] = 0
 
-    vor, vlines = voroi_expand(labels, return_line=True)
+    vor, vlines = voronoi_expand(labels, return_line=True)
     vor0, vor1 = vor.copy(), vor.copy()
     vor0[comp_dilated_nuc != vor0.copy()] = False
     vor1[dilated_nuc != vor1.copy()] = False
