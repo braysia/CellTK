@@ -11,7 +11,7 @@ import scipy
 from skimage.measure import block_reduce
 from scipy.ndimage.filters import gaussian_laplace
 from skimage.exposure import equalize_adapthist, equalize_hist
-from utils.imreg import translation
+from imreg import translation
 from scipy.ndimage import imread
 # from numba.decorators import jit
 from centrosome.filter import stretch
@@ -506,6 +506,7 @@ class MinimalMutualInfoAligner(object):
         self.store = store
         self.mistore = mistore
         self._j, self._i, self.mi = j, i, max(mistore)
+
 
 
 if __name__ == "__main__":
