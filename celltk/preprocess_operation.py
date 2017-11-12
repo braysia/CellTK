@@ -207,3 +207,16 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
         return img
     img = wavelet_subtraction(img, level)
     return convert_positive(img, OFFSET)
+
+def stich_images(dataDir, points, output_path):
+    '''
+    Stiching images with 'Fiji/Stitch_image_Grid_Sequence' results
+    :param dataDir: list of directory
+    :param points: list for position shift
+    :param output_path: target directory to save stitched image
+    :return:
+    '''
+    from utils.stitch_utils import relative_position, stitching
+
+    rel_points = relative_position(points)
+    stitching(dataDir, rel_points, output_path)
