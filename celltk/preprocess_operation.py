@@ -208,8 +208,15 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
     img = wavelet_subtraction(img, level)
     return convert_positive(img, OFFSET)
 
-
 def np_arithmetic(img, npfunc='max'):
     func = getattr(np, npfunc)
     return func(img, axis=2)
 
+def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
+    from utils.stitch_utils import relative_position, stitching
+    '''
+    Stitch images with 'Fiji/Stitch_image_Grid_Sequence' results.
+    '''
+    rp = relative_position(POINTS)
+    img = stitching(img, rp)
+    return img
