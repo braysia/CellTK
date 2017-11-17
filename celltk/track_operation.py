@@ -103,7 +103,6 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
     # This part will make sure that cells outside of these range do not get connected.
     binary_cost[(np.abs(massdiff) > MASSTHRES)] = False
     binary_cost[(dist > DISPLACEMENT)] = False
-
     gp, gc = np.where(binary_cost)
     idx0, idx1 = list(gp), list(gc)
 
@@ -121,7 +120,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
 
 
 def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
-                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False):
+                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False, SMALL_RAD=3, CANDS_LIMIT=300):
     """
     Adaptive segmentation by using tracking informaiton.
     Separate two objects by making a cut at the deflection. For each points on the outline,
@@ -133,18 +132,20 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     THRES_ANGLE (int):  Define the neck points if a triangle has more than this angle.
     STEPLIM (int):      points of neck needs to be separated by at least STEPLIM in parimeters.
     WSLIMIT (bool):     Limit search points to ones overlapped with watershed transformed images. Set it True if calculation is slow.
+
+    SMALL_RAD (int or None): The smallest radius of candidate objects. If you have many cells, set it to None will infer the radius from previous frame.
+    CANDS_LIMIT(int): use lower if slow. limit a number of searches.
+
     """
     labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
     labels1 = -labels.copy()
 
-    CANDS_LIMIT = 300
-
-    if not hasattr(holder, "SMALL_RAD") and not hasattr(holder, "LARGE_RAD"):
+    if SMALL_RAD is None and not hasattr(holder, 'SMALL_RAD'):
         tracked_area = [i.area for i in regionprops(labels)]
-        holder.LARGE_RAD = np.sqrt(max(tracked_area)/np.pi)
-        holder.SMALL_RAD = np.sqrt(np.percentile(tracked_area, 5)/np.pi)
+        holder.SMALL_RAD = np.sqrt(np.percentile(tracked_area, 5)/np.pi)        
+    elif SMALL_RAD is not None:
+        holder.SMALL_RAD = SMALL_RAD
     SMALL_RAD = holder.SMALL_RAD
-    LARGE_RAD = holder.LARGE_RAD
 
     rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)
@@ -160,18 +161,19 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
         if label_id == 0:
             continue
         cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD,
-                        large_rad=LARGE_RAD, EDGELEN=EDGELEN, THRES=THRES_ANGLE)
+                        EDGELEN=EDGELEN, THRES=THRES_ANGLE, CANDS_LIMIT=CANDS_LIMIT)
         cc.prepare_coords_set()
         candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set[:CANDS_LIMIT])
         for c in candidates:
             c.raw_label = label_id
         store.append(candidates)
         coords_store.append(cc.coords_set)
+
     coords_store = [i for i in coords_store if i]
     # Attempt a first cut.
     good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
     labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
-
+    labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
     # iteration from here.
     while good_cells:
         rps0 = regionprops(labels0, img0)
@@ -195,6 +197,6 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
             coords_store.append(coords_set)
         good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
         labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
-    labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
+        labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
     return labels0, labels
 

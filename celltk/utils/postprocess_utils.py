@@ -3,6 +3,7 @@ import numpy as np
 import scipy.ndimage as ndi
 from global_holder import holder
 from math import sqrt
+from filters import label
 
 
 class _RegionProperties2(_RegionProperties):
@@ -46,6 +47,13 @@ class _RegionProperties2(_RegionProperties):
     def major_axis_length(self):
         l1, _ = self.inertia_tensor_eigvals
         return 4 * sqrt(max(l1, 0))
+
+    @property
+    def num_seg(self):
+        """
+        number of isolated segments
+        """
+        return np.max(label(self.image, connectivity=1))
 
 
 

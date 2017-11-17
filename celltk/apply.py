@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
              'eccentricity', 'major_axis_length', 'minor_axis_length', 'max_intensity',
              'mean_intensity', 'median_intensity', 'min_intensity', 'orientation',
-             'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', 'parent']
+             'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', 'parent', 'num_seg']
 
 
 def find_all_children(labels):

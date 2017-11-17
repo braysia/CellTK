@@ -2,7 +2,7 @@
 python celltk/subdetect.py -l c3/img_00000000* -f ring_dilation -o c4 -p MARGIN=0
 """
 
-from scipy.ndimage import imread
+from utils.util import imread
 import tifffile as tiff
 import argparse
 from os.path import basename, join

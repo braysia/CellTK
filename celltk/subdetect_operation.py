@@ -103,3 +103,18 @@ def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=
 
 def laplacian_levelset(labels, img, NITER=100, CURVE=3, PROP=-1):
     return label(levelset_lap(img, labels, NITER, CURVE, PROP))
+
+
+def voronoi_cut(labels):
+    from utils.subdetect_utils import voronoi_expand
+    return voronoi_expand(labels)
+
+
+def detect_puncta_voronoi(labels, img, level=7, PERC=50, FILSIZE=1):
+    from utils.subdetect_utils import voronoi_expand
+    from utils.fish_detect import detect_puncta
+    vor = voronoi_expand(labels)
+    puncta = detect_puncta(img, level=level, PERC=PERC, FILSIZE=FILSIZE)
+    vor[puncta == 0] = 0
+    return vor
+

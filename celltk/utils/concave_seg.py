@@ -216,9 +216,14 @@ def cellfilter(cell, small_area, large_area, major_minor=2.0):
         return False
 
 
+
 class CellCutter(object):
-    def __init__(self, bw, img, wlines, small_rad, large_rad, EDGELEN=10, THRES=180):
-        DISTLIM_SCALE = 1.5
+    def __init__(self, bw, img, wlines, small_rad, large_rad=0, EDGELEN=10, THRES=180, CANDS_LIMIT=300):
+        """
+        Use lower values for CANDS_LIMIT to speed up
+        """
+        large_rad = 0  # fix it later.
+
         self.bw = bw
         self.img = img
         self.wlines = wlines
@@ -226,13 +231,13 @@ class CellCutter(object):
         self.THRES = THRES
         self.filfunc = partial(cellfilter, small_area=np.pi*small_rad**2, large_area=np.pi*large_rad**2, major_minor=2.0)
         self.goodcells = []
-        self.large_rad = large_rad
+        # self.large_rad = large_rad
         self.small_rad = small_rad
-        self.STEPLIM = self.large_rad * np.pi/2
-        self.DISTLIM = self.large_rad * DISTLIM_SCALE
+        self.STEPLIM = self.small_rad * np.pi/2
         self.coords_set = []
         self.cut_coords = []
         self.cut_cells = []
+        self.CANDS_LIMIT = CANDS_LIMIT
 
     def extract_cell_outlines(self):
         o_coords = find_oriented_coords(self.bw)
@@ -300,17 +305,29 @@ class CellCutter(object):
         coords, _ = CoordsConcaveWs(self.cell.o_coords, wlines=self.wlines, edgelen=self.EDGELEN, thres=self.THRES).run()
         if not coords.any():
             return
-        self.coords_set = self.filter_coords_by_dist(coords)
+        self.coords_set = self.make_sort_coordsset_by_dist(coords)
         if not self.coords_set:
             return
+        self.coords_set = self.coords_set[:self.CANDS_LIMIT]
         self.coords_set = self.filter_coords_by_step(self.cell.o_coords, self.coords_set)        
 
-    def filter_coords_by_dist(self, coords):
+    def make_sort_coordsset_by_dist(self, coords):
         dist = cdist(coords, coords)
-        boolarr = np.triu(dist < self.DISTLIM, 1)
+
+        boolarr = np.triu(np.ones(dist.shape, bool), 1)
         a1 = np.tile(range(len(coords)), len(coords)).reshape((len(coords), len(coords)))
         x1, x2 = a1[boolarr], a1.T[boolarr]
+
+        sortorder = np.argsort(dist[boolarr])
+        x1, x2 = x1[sortorder], x2[sortorder]
         return [[coords[i1], coords[i2]] for i1, i2 in zip(x1, x2)]
+
+    # def filter_coords_by_dist(self, coords):
+    #     dist = cdist(coords, coords)
+        # boolarr = np.triu(dist < self.DISTLIM, 1)
+    #     a1 = np.tile(range(len(coords)), len(coords)).reshape((len(coords), len(coords)))
+    #     x1, x2 = a1[boolarr], a1.T[boolarr]
+    #     return [[coords[i1], coords[i2]] for i1, i2 in zip(x1, x2)]
 
     def filter_coords_by_step(self, coords, coords_set):
         new_coords_set = []
