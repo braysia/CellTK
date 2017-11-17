@@ -1,17 +1,11 @@
-from os.path import join
-import os
-import glob
 import numpy as np
-import tifffile as tiff
-from preprocess_utils import histogram_matching
+
 
 """ Stitch images with Fiji results
 Exported from Stitch_image_Grid_Sequence in Fiji
 
+e.g.
 points = [(0.0, 0.0), (-556.46246, -8.537842), (-565.82874, 533.8285), (-131.09012, 483.0899)]
-dataDir=['output/stitch_test/Pos7_n4','output/stitch_test/Pos8_n4',\
-         'output/stitch_test/Pos9_n4','output/stitch_test/Pos10_n4']
-
 """
 
 def relative_position(points):

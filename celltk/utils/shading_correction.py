@@ -6,7 +6,8 @@ import urllib
 import shutil
 from os.path import join
 import os
-from utils.util import imread
+from util import imread
+#from utils.util import imread
 from glob import glob
 import tifffile as tiff
 

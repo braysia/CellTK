@@ -208,15 +208,12 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
     img = wavelet_subtraction(img, level)
     return convert_positive(img, OFFSET)
 
-def stich_images(dataDir, points, output_path):
-    '''
-    Stiching images with 'Fiji/Stitch_image_Grid_Sequence' results
-    :param dataDir: list of directory
-    :param points: list for position shift
-    :param output_path: target directory to save stitched image
-    :return:
-    '''
+def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     from utils.stitch_utils import relative_position, stitching
+    '''
+    Stitch images with 'Fiji/Stitch_image_Grid_Sequence' results.
+    '''
+    rp = relative_position(POINTS)
+    img = stitching(img, rp)
+    return img
 
-    rel_points = relative_position(points)
-    stitching(dataDir, rel_points, output_path)
