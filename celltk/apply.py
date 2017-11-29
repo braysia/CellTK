@@ -22,6 +22,10 @@ import logging
 from scipy.ndimage.morphology import binary_fill_holes
 from scipy.ndimage.morphology import binary_dilation
 
+import warnings
+warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +36,6 @@ PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
 
 
 def find_all_children(labels):
-
     mask = binary_fill_holes(labels < 0)
     mask[labels < 0] = False
     return np.unique(labels[mask]).tolist()
@@ -55,9 +58,6 @@ def add_parent(cells, labels):
     return cells
 
 
-
-# def add_parent_id(labels, img, cells):
-#     return cells
 def apply():
     pass
 
