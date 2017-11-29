@@ -38,14 +38,16 @@ PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
 def find_all_children(labels):
     mask = binary_fill_holes(labels < 0)
     mask[labels < 0] = False
-    return np.unique(labels[mask]).tolist()
+    clabelnums = np.unique(labels[mask]).tolist()
+    if 0 in clabelnums:
+        clabelnums.remove(0)
+    return clabelnums
 
 
 def find_parent_label(labels, child_label):
     mask = binary_dilation(labels == child_label)
     mask[labels == child_label] = False
-    assert len(np.unique(labels[mask])) == 1
-    return labels[mask][0]
+    return max(set(labels[mask].tolist()), key=labels[mask].tolist().count)
 
 
 def add_parent(cells, labels):
