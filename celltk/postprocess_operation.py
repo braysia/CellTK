@@ -14,9 +14,11 @@ def gap_closing(cells, DISPLACEMENT=100, MASSTHRES=0.15, maxgap=4):
     trhandler = TracesController(traces)
 
     # make sure not to have a cell as both disappered and appeared cells
+    store_singleframe = []
     for trace in trhandler.traces[:]:
         if len(trace) < 2:
             trhandler.traces.remove(trace)
+            store_singleframe.append(trace)
     dist = trhandler.pairwise_dist()
     massdiff = trhandler.pairwise_mass()
     framediff = trhandler.pairwise_frame()
@@ -27,7 +29,6 @@ def gap_closing(cells, DISPLACEMENT=100, MASSTHRES=0.15, maxgap=4):
     withinarea_inframe = withinarea * inframe * inmass
     # CHECK: distance as a fine cost
     withinarea_inframe = one_to_one_assignment(withinarea_inframe, dist)
-
     if withinarea_inframe.any():
         disapp_idx, app_idx = np.where(withinarea_inframe)
 
@@ -43,6 +44,7 @@ def gap_closing(cells, DISPLACEMENT=100, MASSTHRES=0.15, maxgap=4):
             app_trace = [i for i in trhandler.traces if app_cell in i][0]
             dis_trace.extend(trhandler.traces.pop(trhandler.traces.index(app_trace)))
     traces = label_traces(trhandler.traces)
+    traces = traces + store_singleframe
     return convert_traces_to_storage(traces)
 
 
