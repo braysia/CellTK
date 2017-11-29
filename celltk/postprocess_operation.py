@@ -90,9 +90,11 @@ def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
     '''
     traces = construct_traces_based_on_next(cells)
     trhandler = TracesController(traces)
+    store_singleframe = []
     for trace in trhandler.traces[:]:
         if len(trace) < 2:
             trhandler.traces.remove(trace)
+            store_singleframe.append(trace)
 
     dist = trhandler.pairwise_dist()
     massdiff = trhandler.pairwise_mass()
@@ -118,4 +120,4 @@ def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
             app_cell = trhandler.appeared()[appi]
             app_cell.parent = dis_cell.label
             # dis_cell.nxt = app_cell
-    return convert_traces_to_storage(trhandler.traces)
+    return convert_traces_to_storage(trhandler.traces + store_singleframe)
