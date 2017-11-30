@@ -219,4 +219,5 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     '''
     rp = relative_position(POINTS)
     img = stitching(img, rp)
+    img = np_arithmetic(img, 'max')
     return img
