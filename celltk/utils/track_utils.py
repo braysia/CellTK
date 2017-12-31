@@ -37,8 +37,8 @@ def prepare_costmat(cost, costDie, costBorn):
     d contains NaN where tracking of those two objects are not possible.
     costDie and costBorn'''
     cost[np.isnan(cost)] = np.Inf  # give a large cost.
-    costDieMat = np.float64(np.diag([costDie]*cost.shape[0]))  # diagonal
-    costBornMat = np.float64(np.diag([costBorn]*cost.shape[1]))
+    costDieMat = np.array(np.float64(np.diag([costDie]*cost.shape[0])))  # diagonal
+    costBornMat = np.array(np.float64(np.diag([costBorn]*cost.shape[1])))
     costDieMat[costDieMat == 0] = np.Inf
     costBornMat[costBornMat == 0] = np.Inf
 
@@ -90,7 +90,6 @@ def _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES):
         dist = cdist([i.centroid for i in rps0], [i.centroid for i in cands])
         massdiff = calc_massdiff(rps0, cands)
         binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)
-
         line_int = [i.line_total for i in cands]
         line_mat = np.tile(line_int, len(rps0)).reshape(len(rps0), len(line_int))
         binary_cost = pick_closer_cost(binary_cost, line_mat)
