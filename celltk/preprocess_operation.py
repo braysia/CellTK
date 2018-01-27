@@ -41,7 +41,7 @@ def curvature_anisotropic_smooth(img, NITER=10):
 def background_subtraction_wavelet_hazen(img, THRES=100, ITER=5, WLEVEL=6, OFFSET=50):
     """Wavelet background subtraction.
     """
-    back = wavelet_subtraction_hazen(img, ITER=ITER, THRES=THRES, WLEVEL=WLEVEL)
+    back = wavelet_subtraction_hazen(img.astype(np.float), ITER=ITER, THRES=THRES, WLEVEL=WLEVEL)
     img = img - back
     return convert_positive(img, OFFSET)
 
