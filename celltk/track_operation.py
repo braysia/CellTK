@@ -204,18 +204,19 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
 
 
 def watershed_distance(img0, img1, labels0, labels1, DISPLACEMENT=10,
-                       MASSTHRES=0.2, ERODI=10, MIN_SIZE=50):
+                       MASSTHRES=0.2, REGMAX=10, MIN_SIZE=50):
     '''
     Adaptive segmentation by using tracking informaiton.
     watershed existing label, meaning make a cut at the deflection.
     After the cuts, objects will be linked if they are within DISPLACEMENT and MASSTHRES.
     If two candidates are found, it will pick a closer one.
+    track_neck_cut may be more sensitive but it takes a long time if objects are not smooth.
     Args:
-    ERODI (int):        Erosion size element for generating watershed seeds.
-                        Smaller ERODI will allow more cuts.
-    DISPLACEMENT (int): The maximum distance (in pixel)
-    MASSTHRES (float):  The maximum difference of total intensity changes.
-                        0.2 means it allows for 20% total intensity changes.
+        REGMAX (int):       Watershed seeds will be separated by at least REGMAX.
+                            Smaller REGMAX will allow more cuts.
+        DISPLACEMENT (int): The maximum distance (in pixel)
+        MASSTHRES (float):  The maximum difference of total intensity changes.
+                            0.2 means it allows for 20% total intensity changes.
     '''
     labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
 
@@ -227,7 +228,7 @@ def watershed_distance(img0, img1, labels0, labels1, DISPLACEMENT=10,
         from utils.track_utils import _find_match
         untracked_labels = labels1.copy()
         untracked_labels[untracked_labels < 0] = 0
-        wshed_labels = watershed_divide(untracked_labels, regmax=ERODI, min_size=MIN_SIZE)
+        wshed_labels = watershed_divide(untracked_labels, regmax=REGMAX, min_size=MIN_SIZE)
         wshed_labels = label(wshed_labels)
 
         store = regionprops(wshed_labels, img1)
