@@ -119,6 +119,26 @@ def _update_labels_neck_cut(labels0, labels1, good_cells):
     for cell in good_cells:
         for c0, c1 in cell.coords:
             neg_labels[c0, c1] = cell.previous.label
-            labels0[labels0 == cell.previous.label] = -cell.previous.label
+        labels0[labels0 == cell.previous.label] = -cell.previous.label
     labels = labels + neg_labels
     return labels0, labels
+
+
+def _find_match(rps0, cands, DISPLACEMENT, MASSTHRES):
+    good_cells = []
+    if not cands or not rps0:
+        return []
+    dist = cdist([i.centroid for i in rps0], [i.centroid for i in cands])
+    massdiff = calc_massdiff(rps0, cands)
+    binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)
+    binary_cost = pick_closer_cost(binary_cost, dist)
+    binary_cost = pick_closer_cost(binary_cost.T, dist.T).T
+    idx1, idx0 = find_one_to_one_assign(binary_cost.copy())
+    if not idx0:
+        return []
+    i0, i1 = idx0[0], idx1[0]
+    cell = cands[i1]
+    cell.previous = rps0[i0]
+    good_cells.append(cell)
+    return good_cells
+

@@ -161,7 +161,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     for label_id in unique_labels:
         if label_id == 0:
             continue
-        cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD, 
+        cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD,
                         EDGELEN=EDGELEN, THRES=THRES_ANGLE, CANDS_LIMIT=CANDS_LIMIT)
         cc.prepare_coords_set()
         candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set[:CANDS_LIMIT])
@@ -201,3 +201,44 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
         labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
     return labels0, labels
 
+
+
+def watershed_distance(img0, img1, labels0, labels1, DISPLACEMENT=10,
+                       MASSTHRES=0.2, ERODI=10, MIN_SIZE=50):
+    '''
+    Adaptive segmentation by using tracking informaiton.
+    watershed existing label, meaning make a cut at the deflection.
+    After the cuts, objects will be linked if they are within DISPLACEMENT and MASSTHRES.
+    If two candidates are found, it will pick a closer one.
+    Args:
+    ERODI (int):        Erosion size element for generating watershed seeds.
+                        Smaller ERODI will allow more cuts.
+    DISPLACEMENT (int): The maximum distance (in pixel)
+    MASSTHRES (float):  The maximum difference of total intensity changes.
+                        0.2 means it allows for 20% total intensity changes.
+    '''
+    labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
+
+    def _wd(labels0, labels, img0, img1):
+        labels1 = -labels.copy()
+        rps0 = regionprops(labels0, img0)
+
+        from subdetect_operation import watershed_divide  # DO NOT MOVE IT
+        from utils.track_utils import _find_match
+        untracked_labels = labels1.copy()
+        untracked_labels[untracked_labels < 0] = 0
+        wshed_labels = watershed_divide(untracked_labels, regmax=ERODI, min_size=MIN_SIZE)
+        wshed_labels = label(wshed_labels)
+
+        store = regionprops(wshed_labels, img1)
+        good_cells = _find_match(rps0, store, DISPLACEMENT, MASSTHRES)
+        for gc in good_cells:  # needed to reuse _update_labels_neck_cut
+            gccrds = gc.coords[0]
+            gc.raw_label = labels1[gccrds[0], gccrds[1]]
+        labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
+        labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
+        return labels0, labels, good_cells
+    labels0, labels, good_cells = _wd(labels0, labels, img0, img1)
+    while good_cells:
+        labels0, labels, good_cells = _wd(labels0, labels, img0, img1)
+    return labels0, labels
