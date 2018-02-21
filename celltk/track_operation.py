@@ -149,6 +149,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
 
     rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)
+    unique_labels = unique_labels[unique_labels > 0]
 
     if WSLIMIT:
         wlines = wshed_raw(labels1 > 0, img1)
@@ -160,7 +161,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     for label_id in unique_labels:
         if label_id == 0:
             continue
-        cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD,
+        cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD, 
                         EDGELEN=EDGELEN, THRES=THRES_ANGLE, CANDS_LIMIT=CANDS_LIMIT)
         cc.prepare_coords_set()
         candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set[:CANDS_LIMIT])
@@ -174,7 +175,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
     labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
     labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
-    # iteration from here.
+
     while good_cells:
         rps0 = regionprops(labels0, img0)
         labels1 = -labels.copy()
