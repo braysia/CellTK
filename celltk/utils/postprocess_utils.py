@@ -55,8 +55,6 @@ class _RegionProperties2(_RegionProperties):
         """
         return np.max(label(self.image, connectivity=1))
 
-
-
 def regionprops(label_image, intensity_image=None, cache=True):
     label_image = np.squeeze(label_image)
 
@@ -75,8 +73,7 @@ def regionprops(label_image, intensity_image=None, cache=True):
 
         label = i + 1
 
-        props = _RegionProperties2(sl, label, label_image, intensity_image,
-                                  cache)
+        props = _RegionProperties2(sl, label, label_image, intensity_image, cache)
         regions.append(props)
 
     return regions
@@ -93,3 +90,32 @@ class Cell(object):
         self.coords = regionprop.coords
         self.abs_id = holder.count()
         self.centroid = regionprop.centroid
+
+
+class LCell(object):
+    def __init__(self, regionprop):
+        for p in ['area', 'num_seg', 'median_intensity', 'total_intensity', 'x', 'y', 'cell_id', 'label']:
+            setattr(self, p, getattr(regionprop, p))
+        self.abs_id = holder.count()
+        self._original_label = self.label
+        self.nxt = None
+        self.parent = None
+
+# class LCell(object):
+#     def __init__(self, regionprop):
+#         self._labels = ['area', 'num_seg', 'median_intensity', 'total_intensity', 'x', 'y', 'cell_id', 'label']
+#         self._data = np.zeros(len(self._labels))
+#         for num, p in enumerate(self._labels):
+#             self._data[num] = getattr(regionprop, p)
+#         self.parent = None
+#         self.nxt =None
+    
+#     def __getattr__(self, name):
+#         if name in self._labels:
+#             return self._data[self._labels.index(name)]
+#         super(LCell, self).__getattr__(name)
+
+#     def __setattr__(self, name, value):
+#         object.__setattr__(self, name, value)
+#         if name in self._labels:
+#             self._data[self._labels.index(name)] = value
