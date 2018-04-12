@@ -149,6 +149,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
 
     rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)
+    unique_labels = unique_labels[unique_labels > 0]
 
     if WSLIMIT:
         wlines = wshed_raw(labels1 > 0, img1)
@@ -174,7 +175,7 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
     labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
     labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
-    # iteration from here.
+
     while good_cells:
         rps0 = regionprops(labels0, img0)
         labels1 = -labels.copy()
@@ -200,3 +201,45 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
         labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
     return labels0, labels
 
+
+
+def watershed_distance(img0, img1, labels0, labels1, DISPLACEMENT=10,
+                       MASSTHRES=0.2, REGMAX=10, MIN_SIZE=50):
+    '''
+    Adaptive segmentation by using tracking informaiton.
+    watershed existing label, meaning make a cut at the deflection.
+    After the cuts, objects will be linked if they are within DISPLACEMENT and MASSTHRES.
+    If two candidates are found, it will pick a closer one.
+    track_neck_cut may be more sensitive but it takes a long time if objects are not smooth.
+    Args:
+        REGMAX (int):       Watershed seeds will be separated by at least REGMAX.
+                            Smaller REGMAX will allow more cuts.
+        DISPLACEMENT (int): The maximum distance (in pixel)
+        MASSTHRES (float):  The maximum difference of total intensity changes.
+                            0.2 means it allows for 20% total intensity changes.
+    '''
+    labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
+
+    def _wd(labels0, labels, img0, img1):
+        labels1 = -labels.copy()
+        rps0 = regionprops(labels0, img0)
+
+        from subdetect_operation import watershed_divide  # DO NOT MOVE IT
+        from utils.track_utils import _find_match
+        untracked_labels = labels1.copy()
+        untracked_labels[untracked_labels < 0] = 0
+        wshed_labels = watershed_divide(untracked_labels, regmax=REGMAX, min_size=MIN_SIZE)
+        wshed_labels = label(wshed_labels)
+
+        store = regionprops(wshed_labels, img1)
+        good_cells = _find_match(rps0, store, DISPLACEMENT, MASSTHRES)
+        for gc in good_cells:  # needed to reuse _update_labels_neck_cut
+            gccrds = gc.coords[0]
+            gc.raw_label = labels1[gccrds[0], gccrds[1]]
+        labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
+        labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
+        return labels0, labels, good_cells
+    labels0, labels, good_cells = _wd(labels0, labels, img0, img1)
+    while good_cells:
+        labels0, labels, good_cells = _wd(labels0, labels, img0, img1)
+    return labels0, labels

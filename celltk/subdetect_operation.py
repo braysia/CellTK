@@ -6,7 +6,8 @@ from utils.concave_seg import levelset_lap
 from utils.filters import label, adaptive_thresh
 from scipy.ndimage.filters import minimum_filter
 import numpy as np
-
+from scipy.ndimage import morphology
+from skimage.morphology import remove_small_objects
 
 np.random.seed(0)
 
@@ -85,11 +86,11 @@ def concave_cut(labels, img, SMALL_RAD=7, LARGE_RAD=14, EDGELEN=6, THRES=180):
     return labels
 
 
-# def watershed_cut(labels, img, MIN_SIGMA=2, MAX_SIGMA=10, THRES=1000):
-#     from utils.filters import lap_local_max, sitk_watershed_intensity
-#     sigma_list = range(int(MIN_SIGMA), int(MAX_SIGMA))
-#     local_maxima = lap_local_max(img, sigma_list, THRES)
-#     return sitk_watershed_intensity(labels, local_maxima)
+def watershed_cut(labels, img, MIN_SIGMA=2, MAX_SIGMA=10, THRES=1000):
+    from utils.filters import lap_local_max, sitk_watershed_intensity
+    sigma_list = range(int(MIN_SIGMA), int(MAX_SIGMA))
+    local_maxima = lap_local_max(img, sigma_list, THRES)
+    return sitk_watershed_intensity(labels, local_maxima)
 
 
 def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=1):
@@ -118,3 +119,25 @@ def detect_puncta_voronoi(labels, img, level=7, PERC=50, FILSIZE=1):
     vor[puncta == 0] = 0
     return vor
 
+
+def morphological(labels, func='grey_opening', size=3, iterations=1):
+    morph_operation = getattr(morphology, func)
+    for i in range(iterations):
+        labels = morph_operation(labels, size=(size, size))
+    return labels
+
+
+def watershed_divide(labels, regmax=10, min_size=100):
+    """
+    divide objects in labels with watershed segmentation.
+        regmax: 
+        min_size: objects smaller than this size will not be divided.
+    """
+    from utils.subdetect_utils import watershed_labels
+
+    large_labels = remove_small_objects(labels, min_size, connectivity=4)
+    labels[large_labels > 0] = 0
+    ws_large = watershed_labels(large_labels, regmax)
+    ws_large += labels.max()
+    ws_large[ws_large == labels.max()] = 0
+    return labels + ws_large

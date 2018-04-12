@@ -2,6 +2,8 @@ import SimpleITK as sitk
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 from skimage.morphology import watershed as skiwatershed
+from skimage.measure import label
+from skimage.feature import peak_local_max
 
 
 def dilate_sitk(labels, RAD):
@@ -115,3 +117,20 @@ def dilate_to_cytoring_buffer(labels, RINGWIDTH, MARGIN, BUFFER):
         vlines = dilate_sitk(vlines.astype(np.uint32), BUFFER)
         dilated_nuc[vlines > 0] = 0
     return dilated_nuc.astype(np.uint16)
+
+
+def watershed_labels(labels, regmax):
+    # Since there are non-unique values for dist, add very small numbers. This will separate each marker by regmax at least.
+    dist = distance_transform_edt(labels) + np.random.rand(*labels.shape)*1e-10
+    labeled_maxima = label(peak_local_max(dist, min_distance=int(regmax), indices=False))
+    wshed = -dist
+    wshed = wshed - np.min(dist)
+    markers = np.zeros(wshed.shape, np.int16)
+    markers[labeled_maxima > 0] = -labeled_maxima[labeled_maxima > 0]
+    markers[labels == 0] = 0
+    wlabels = skiwatershed(wshed, markers, connectivity=np.ones((3,3), bool), mask=labels!=0)
+    wlabels = -wlabels
+    wlabels = labels.max() + wlabels
+    wlabels[wlabels == labels.max()] = 0
+    all_labels = label(labels + wlabels)
+    return all_labels

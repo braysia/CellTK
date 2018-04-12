@@ -37,8 +37,8 @@ def prepare_costmat(cost, costDie, costBorn):
     d contains NaN where tracking of those two objects are not possible.
     costDie and costBorn'''
     cost[np.isnan(cost)] = np.Inf  # give a large cost.
-    costDieMat = np.float64(np.diag([costDie]*cost.shape[0]))  # diagonal
-    costBornMat = np.float64(np.diag([costBorn]*cost.shape[1]))
+    costDieMat = np.array(np.float64(np.diag([costDie]*cost.shape[0])))  # diagonal
+    costBornMat = np.array(np.float64(np.diag([costBorn]*cost.shape[1])))
     costDieMat[costDieMat == 0] = np.Inf
     costBornMat[costBornMat == 0] = np.Inf
 
@@ -90,7 +90,6 @@ def _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES):
         dist = cdist([i.centroid for i in rps0], [i.centroid for i in cands])
         massdiff = calc_massdiff(rps0, cands)
         binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)
-
         line_int = [i.line_total for i in cands]
         line_mat = np.tile(line_int, len(rps0)).reshape(len(rps0), len(line_int))
         binary_cost = pick_closer_cost(binary_cost, line_mat)
@@ -120,6 +119,26 @@ def _update_labels_neck_cut(labels0, labels1, good_cells):
     for cell in good_cells:
         for c0, c1 in cell.coords:
             neg_labels[c0, c1] = cell.previous.label
-            labels0[labels0 == cell.previous.label] = -cell.previous.label
+        labels0[labels0 == cell.previous.label] = -cell.previous.label
     labels = labels + neg_labels
     return labels0, labels
+
+
+def _find_match(rps0, cands, DISPLACEMENT, MASSTHRES):
+    good_cells = []
+    if not cands or not rps0:
+        return []
+    dist = cdist([i.centroid for i in rps0], [i.centroid for i in cands])
+    massdiff = calc_massdiff(rps0, cands)
+    binary_cost = (dist < DISPLACEMENT) * (abs(massdiff) < MASSTHRES)
+    binary_cost = pick_closer_cost(binary_cost, dist)
+    binary_cost = pick_closer_cost(binary_cost.T, dist.T).T
+    idx1, idx0 = find_one_to_one_assign(binary_cost.copy())
+    if not idx0:
+        return []
+    i0, i1 = idx0[0], idx1[0]
+    cell = cands[i1]
+    cell.previous = rps0[i0]
+    good_cells.append(cell)
+    return good_cells
+

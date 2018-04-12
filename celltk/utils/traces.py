@@ -26,7 +26,7 @@ class TracesController(object):
 
     def pairwise_dist(self):
         if self.disappeared() and self.appeared():
-            dist = cdist([i.centroid for i in self.disappeared()], [i.centroid for i in self.appeared()])
+            dist = cdist([(i.y, i.x) for i in self.disappeared()], [(i.y, i.x) for i in self.appeared()])
             return dist
         else:
             return np.array([])
@@ -148,8 +148,8 @@ def division_frames_and_cell_ids(storage):
 
 
 def retrieve_coor(obj):
-    xObj = np.array([i.centroid[1] for i in obj]).astype(np.float32)
-    yObj = np.array([i.centroid[0] for i in obj]).astype(np.float32)
+    xObj = np.array([i.x for i in obj]).astype(np.float32)
+    yObj = np.array([i.y for i in obj]).astype(np.float32)
     return xObj, yObj
 
 
