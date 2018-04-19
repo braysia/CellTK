@@ -79,3 +79,15 @@ def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, 
         return temp
     bw = mark_pos(img, coords)
     return label(binary_dilation(bw, np.ones((3, 3))))
+
+
+def deepcell(img, model_path, weight_path, padding=30, rad=[10, 30]):
+    from utils.tf_deepcell.predict import predict
+    from segment import clean_labels
+    from subdetect_operation import propagate_multisnakes
+    img = predict(holder.path, model_path, weight_path)
+    cell = img[1] > img[0] * 100
+    cell[img[1] < img[2] * 100] = False
+    img = np.pad(img, padding, 'constant')
+    cimg = propagate_multisnakes(label(cell), img, NITER=2, lambda2=30)
+    return clean_labels(cimg, rad=rad)
