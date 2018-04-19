@@ -102,7 +102,7 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp
     """
     Use empty images for background subtraction and illumination bias correction.
     Given multiple reference images, it will calculate median profile and use it for subtraction.
-    If flatfield image has the same illumination pattern but different exposure to the img,  
+    If flatfield image has the same illumination pattern but different exposure to the img,
     turning on bg_align would calculate correction factor.
 
     ff_paths (str or List(str)): image path for flat fielding references.
@@ -208,9 +208,11 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
     img = wavelet_subtraction(img, level)
     return convert_positive(img, OFFSET)
 
+
 def np_arithmetic(img, npfunc='max'):
     func = getattr(np, npfunc)
     return func(img, axis=2)
+
 
 def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     from utils.stitch_utils import relative_position, stitching
@@ -220,3 +222,9 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     rp = relative_position(POINTS)
     img = stitching(img, rp)
     return img
+
+
+def deepcell(img, model_path, weight_path):
+    from utils.tf_deepcell.predict import predict
+    images = predict(holder.path, model_path, weight_path)
+    import ipdb;ipdb.set_trace()

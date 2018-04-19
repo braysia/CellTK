@@ -3,6 +3,9 @@ import tifffile as tiff
 from os.path import basename, join
 import numpy as np
 import logging
+import tempfile
+import shutil
+import urllib
 
 logger = logging.getLogger(__name__)
 

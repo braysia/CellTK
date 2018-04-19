@@ -33,7 +33,7 @@ def correct_shade(img, ref, darkref, ch):
     d0 = img.astype(np.float) - darkref[ch]
     d1 = ref[ch] - darkref[ch]
     return d1.mean() * d0/d1
-    
+
 
 def shading_correction_folder(inputfolder, outputfolder, binning=3, magnification=20):
     """
@@ -53,7 +53,11 @@ def shading_correction_folder(inputfolder, outputfolder, binning=3, magnificatio
                 data = json.load(mfile)
                 channels = data['Summary']['ChNames']
             for chnum, ch in enumerate(channels):
-                pathlist = glob(join(dirname, '*channel{0:03d}*'.format(chnum)))            
+                pathlist = glob(join(dirname, '*channel{0:03d}*'.format(chnum)))
                 for path in pathlist:
-                    img = correct_shade(imread(path), ref, darkref, ch)
-                    tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))
+                    if ch == 'PHASE':
+                        img = imread(path)
+                        tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))
+                    else:
+                        img = correct_shade(imread(path), ref, darkref, ch)
+                        tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))
