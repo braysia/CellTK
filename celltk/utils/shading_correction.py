@@ -55,5 +55,9 @@ def shading_correction_folder(inputfolder, outputfolder, binning=3, magnificatio
             for chnum, ch in enumerate(channels):
                 pathlist = glob(join(dirname, '*channel{0:03d}*'.format(chnum)))            
                 for path in pathlist:
-                    img = correct_shade(imread(path), ref, darkref, ch)
+                    try:
+                        img = correct_shade(imread(path), ref, darkref, ch)
+                    except:
+                        print "ch might not exist as a reference."
+                        img = imread(path)
                     tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))
