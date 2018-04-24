@@ -82,10 +82,15 @@ def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, 
 
 
 def deepcell(img, model_path, weight_path, padding=30, rad=[10, 30]):
+    """
+    model_path and weight_path can be either local path or url.
+    """
     from utils.tf_deepcell.predict import predict
     from segment import clean_labels
     from subdetect_operation import propagate_multisnakes
-    pimg = predict(holder.path, model_path, weight_path)
+    from utils.file_io import LocalPath
+    with LocalPath(model_path) as mpath, LocalPath(weight_path) as wpath:
+        pimg = predict(holder.path, mpath, wpath)
     cell = pimg[1] > pimg[0] * 100
     cell[pimg[1] < pimg[2] * 100] = False
     img = np.pad(img, padding, 'constant')
