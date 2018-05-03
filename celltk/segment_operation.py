@@ -89,10 +89,12 @@ def deepcell(img, model_path, weight_path, padding=30, rad=[10, 30]):
     from segment import clean_labels
     from subdetect_operation import propagate_multisnakes
     from utils.file_io import LocalPath
+    from utils.global_holder import holder
     with LocalPath(model_path) as mpath, LocalPath(weight_path) as wpath:
         pimg = predict(holder.path, mpath, wpath)
     cell = pimg[1] > pimg[0] * 100
     cell[pimg[1] < pimg[2] * 100] = False
-    img = np.pad(img, padding, 'constant')
+    cell = np.pad(cell, padding, 'constant')
+    print cell.shape, img.shape
     cimg = propagate_multisnakes(label(cell), img, NITER=2, lambda2=30)
     return clean_labels(cimg, rad=rad)
