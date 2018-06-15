@@ -42,6 +42,7 @@ def caller(inputs, output, functions, params):
     logger.info("Functions {0} for {1} images.".format(functions, len(inputs)))
 
     for holder.frame, path in enumerate(inputs):
+        holder.path = path
         img = imread(path)
         for function, param in zip(functions, params):
             func = getattr(segment_operation, function)

@@ -23,12 +23,12 @@ def caller(inputs, output, functions, params):
 
     logger.info("Functions {0} for {1} images.".format(functions, len(inputs)))
 
-    for holder.frame, path in enumerate(inputs):
-        img = imread(path)
+    for holder.frame, holder.path in enumerate(inputs):
+        img = imread(holder.path)
         for function, param in zip(functions, params):
             func = getattr(preprocess_operation, function)
             img = func(img, **param)
-        imsave(img, output, path)
+        imsave(img, output, holder.path)
         logger.info("\tframe {0} done.".format(holder.frame))
 
 

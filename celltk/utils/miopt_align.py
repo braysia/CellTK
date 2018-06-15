@@ -68,17 +68,17 @@ def calc_crop_coordinates(store, shapes):
     return [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
 
 
-def sitk_translation(img0, img1):
-
+def sitk_translation(img0, img1, off0=0, off1=0):
     s0, s1 = sitk.GetImageFromArray(img0), sitk.GetImageFromArray(img1)
     s0, s1 = sitk.Cast(s0, sitk.sitkFloat32), sitk.Cast(s1, sitk.sitkFloat32)
 
     R = sitk.ImageRegistrationMethod()
     R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=250)
     R.SetOptimizerAsRegularStepGradientDescent(4.0, .01, 200 )
-    # R.SetOptimizerAsLBFGSB()
 
-    R.SetInitialTransform(sitk.TranslationTransform(s0.GetDimension()))
+    cc = sitk.TranslationTransform(s0.GetDimension())
+    cc.SetOffset([-off1, -off0])
+    R.SetInitialTransform(cc)
     R.SetInterpolator(sitk.sitkLinear)
 
     R.SetShrinkFactorsPerLevel([4, 2, 1])
@@ -86,3 +86,14 @@ def sitk_translation(img0, img1):
 
     outTx = R.Execute(s0, s1)
     return -int(round(outTx.GetParameters()[1])), -int(round(outTx.GetParameters()[0]))
+
+
+def register_multiseeds(img0, img1, bins=250, initial=(-30, 0, 30)):
+    store = []
+    for i in initial:
+        for ii in initial:
+            s0, s1 = sitk_translation(img0, img1, i, ii)
+            p2, p1 = offset_slice(img1, img0, s0, s1)
+            store.append(((s0, s1), mutual_information(p1, p2, bins)))
+    store.sort(key=lambda x: x[1])
+    return store[-1]

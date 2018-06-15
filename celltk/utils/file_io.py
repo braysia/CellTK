@@ -3,6 +3,9 @@ import tifffile as tiff
 from os.path import basename, join
 import numpy as np
 import logging
+import tempfile
+import shutil
+import urllib
 
 logger = logging.getLogger(__name__)
 
@@ -46,3 +49,27 @@ def lbread(path, nonneg=True):
         img[img < 0] = 0
     return img
 
+
+class LocalPath(object):
+    """Generate a local path if URL is given.
+
+    with LocalPath(path) as lpath:
+        print(lpath)
+
+    """
+    local = True
+    def __init__(self, path):
+        if os.path.exists(path):
+            self.path = path
+        else:
+            self.local = False
+            temp_dir = tempfile.mkdtemp()
+            self.path = join(temp_dir, os.path.basename(path))
+            urllib.urlretrieve(path, self.path)
+
+    def __enter__(self):
+        return self.path
+
+    def __exit__(self, *args):
+        if not self.local:
+            shutil.rmtree(os.path.dirname(self.path))
