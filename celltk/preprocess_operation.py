@@ -16,7 +16,8 @@ import logging
 from utils.global_holder import holder
 from utils.mi_align import calc_jitters_multiple, calc_crop_coordinates
 from utils.shading_correction import retrieve_ff_ref
-
+import cv2
+from utils.background_subtractor import subtract_background_rolling_ball
 
 logger = logging.getLogger(__name__)
 np.random.seed(0)
@@ -250,4 +251,10 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     img = np_arithmetic(img, 'max')
     return img
 
+def rolling_ball(img, RAD=30):
+    
+    img = (img/256).astype('uint8')
+    img = subtract_background_rolling_ball(img, RAD, light_background=False,\
+                                     use_paraboloid=False, do_presmooth=True, create_background=False)
+    return img
 
