@@ -5,7 +5,7 @@ import numpy as np
 from utils.preprocess_utils import homogenize_intensity_n4
 from utils.preprocess_utils import convert_positive, estimate_background_prc
 from utils.preprocess_utils import resize_img
-from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen
+from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen, rolling_ball_subtraction_hazen
 from utils.filters import adaptive_thresh
 from utils.cp_functions import align_cross_correlation, align_mutual_information
 from utils.util import imread
@@ -46,6 +46,13 @@ def background_subtraction_wavelet_hazen(img, THRES=100, ITER=5, WLEVEL=6, OFFSE
     img = img - back
     return convert_positive(img, OFFSET)
 
+def background_subtraction_rolling_ball_hazen(img, RADIUS=100, SIGMA=3, OFFSET=50):
+    """Rolling ball background subtraction.
+    """
+    back = rolling_ball_subtraction_hazen(img.astype(np.float), RADIUS)
+    img = img - back
+    #return img
+    return convert_positive(img, OFFSET)
 
 def n4_illum_correction(img, RATIO=1.5, FILTERINGSIZE=50):
     """
@@ -251,10 +258,11 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     img = np_arithmetic(img, 'max')
     return img
 
-def rolling_ball(img, RAD=30):
+def rolling_ball(img, RADIUS=30):
     
     img = (img/256).astype('uint8')
-    img = subtract_background_rolling_ball(img, RAD, light_background=False,\
+    img = subtract_background_rolling_ball(img, RADIUS, light_background=False,\
                                      use_paraboloid=False, do_presmooth=True, create_background=False)
     return img
+
 

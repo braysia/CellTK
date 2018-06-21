@@ -3,6 +3,7 @@ from skimage.transform import resize
 from pywt import WaveletPacket2D
 import SimpleITK as sitk
 from wavelet_bgr import WaveletBGR
+from rolling_ball import PyRollingBall
 from functools import partial
 from skimage.transform import resize
 from scipy.ndimage.filters import gaussian_filter
@@ -116,3 +117,9 @@ def resize_img(himg, origshape):
     resized *= maxh
     resized += minh
     return resized
+
+def rolling_ball_subtraction_hazen(img, RADIUS=10, SIGMA=3):
+    rb = PyRollingBall(ball_radius=RADIUS, smoothing_sigma=SIGMA)
+    f = partial(rb.estimateBG)
+    background = remove_odd_addback(img, f)
+    return background
