@@ -68,21 +68,35 @@ def calc_crop_coordinates(store, shapes):
     return [(hi, hi+size_h, wi, wi+size_w) for hi, wi in zip(start_h, start_w)]
 
 
-def sitk_translation(img0, img1):
+def sitk_translation(img0, img1, off0=0, off1=0):
+    """
 
+
+
+                + off1
+                ^
+                |
+    off0 + <--- + ---> - off0
+                |
+                v
+                - off1
+
+    """
     s0, s1 = sitk.GetImageFromArray(img0), sitk.GetImageFromArray(img1)
     s0, s1 = sitk.Cast(s0, sitk.sitkFloat32), sitk.Cast(s1, sitk.sitkFloat32)
 
     R = sitk.ImageRegistrationMethod()
     R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=250)
     R.SetOptimizerAsRegularStepGradientDescent(4.0, .01, 200 )
-    # R.SetOptimizerAsLBFGSB()
 
-    R.SetInitialTransform(sitk.TranslationTransform(s0.GetDimension()))
+    cc = sitk.TranslationTransform(s0.GetDimension())
+    cc.SetOffset([-off1, -off0])
+    R.SetInitialTransform(cc)
+
     R.SetInterpolator(sitk.sitkLinear)
 
     R.SetShrinkFactorsPerLevel([4, 2, 1])
     R.SetSmoothingSigmasPerLevel([8, 4, 1])
 
     outTx = R.Execute(s0, s1)
-    return -int(round(outTx.GetParameters()[1])), -int(round(outTx.GetParameters()[0]))
+    return -int(round(outTx.GetParameters()[1])), -int(round(outTx.GetParameters()[0])), cc
