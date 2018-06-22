@@ -97,12 +97,38 @@ def align(img, CROP=0.05):
         return img[jt[0]:jt[1], jt[2]:jt[3], :]
 
 
+def align2(img, CROP=0.05):
+    """
+    CROP (float): crop images beforehand. When set to 0.05, 5% of each edges are cropped.
+    """
+    if not hasattr(holder, "align"):
+        if isinstance(holder.inputs[0], list) or isinstance(holder.inputs[0], tuple):
+            inputs = [i[0] for i in holder.inputs]
+        else:
+            inputs = holder.inputs
+
+        img0 = imread(inputs[0])
+
+        (ch, cw) = [int(CROP * i) for i in img0.shape]
+        ch = None if ch == 0 else ch
+        cw = None if cw == 0 else cw
+
+        jitters = calc_jitters_multiple(inputs, ch, cw)
+        holder.align = calc_crop_coordinates(jitters, img0.shape)
+        logger.debug('holder.align set to {0}'.format(holder.align))
+    jt = holder.align[holder.frame]
+    logger.debug('Jitter: {0}'.format(jt))
+    if img.ndim == 2:
+        return img[jt[0]:jt[1], jt[2]:jt[3]]
+    if img.ndim == 3:
+        return img[jt[0]:jt[1], jt[2]:jt[3], :]
+
 
 def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp_corr=False):
     """
     Use empty images for background subtraction and illumination bias correction.
     Given multiple reference images, it will calculate median profile and use it for subtraction.
-    If flatfield image has the same illumination pattern but different exposure to the img,  
+    If flatfield image has the same illumination pattern but different exposure to the img,
     turning on bg_align would calculate correction factor.
 
     ff_paths (str or List(str)): image path for flat fielding references.
@@ -208,9 +234,11 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
     img = wavelet_subtraction(img, level)
     return convert_positive(img, OFFSET)
 
+
 def np_arithmetic(img, npfunc='max'):
     func = getattr(np, npfunc)
     return func(img, axis=2)
+
 
 def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     from utils.stitch_utils import relative_position, stitching
@@ -220,3 +248,5 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     rp = relative_position(POINTS)
     img = stitching(img, rp)
     return img
+
+
