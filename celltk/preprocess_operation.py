@@ -18,10 +18,14 @@ from utils.mi_align import calc_jitters_multiple, calc_crop_coordinates
 from utils.shading_correction import retrieve_ff_ref
 import cv2
 from utils.background_subtractor import subtract_background_rolling_ball
+from scipy.ndimage.filters import gaussian_filter
 
 logger = logging.getLogger(__name__)
 np.random.seed(0)
 
+def gaussian_blur(img, SIGMA=3):
+    img = gaussian_filter(img, sigma=SIGMA)
+    return img
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
     if NEG:
