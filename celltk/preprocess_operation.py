@@ -55,7 +55,6 @@ def background_subtraction_rolling_ball_hazen(img, RADIUS=100, SIGMA=3, OFFSET=5
     """
     back = rolling_ball_subtraction_hazen(img.astype(np.float), RADIUS)
     img = img - back
-    #return img
     return convert_positive(img, OFFSET)
 
 def n4_illum_correction(img, RATIO=1.5, FILTERINGSIZE=50):
