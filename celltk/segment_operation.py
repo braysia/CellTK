@@ -44,7 +44,7 @@ def adaptive_thres_two(img, FIL1=10, FIL2=100, R1=100, R2=100):
     """
     bw = adaptive_thresh(img, R=R1, FILTERINGSIZE=FIL1)
     foreground = adaptive_thresh(img, R=R2, FILTERINGSIZE=FIL2)
-    bw[-foreground] = 0
+    bw[~foreground] = 0
     return label(bw)
 
 
@@ -54,7 +54,7 @@ def adaptive_thres_otsu(img, FIL1=4, R1=1):
     """
     bw = adaptive_thresh(img, R1, FIL1)
     foreground = global_otsu(img) > 0
-    bw[-foreground] = 0
+    bw[~foreground] = 0
     return label(bw)
 
 
@@ -67,7 +67,7 @@ def watershed_labels(labels, REG=10):
 
 def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, num_sigma=10):
     sigma_list = np.linspace(min_sigma, max_sigma, num_sigma)
-    gl_images = [-gaussian_laplace(img, s) * s ** 2 for s in sigma_list]
+    gl_images = [~gaussian_laplace(img, s) * s ** 2 for s in sigma_list]
     image_cube = np.dstack(gl_images)
     max_image = np.max(image_cube, axis=2)
     coords = grey_dilation(max_image, separation=separation, percentile=percentile)
