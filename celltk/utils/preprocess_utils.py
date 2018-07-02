@@ -118,6 +118,7 @@ def resize_img(himg, origshape):
     resized += minh
     return resized
 
+
 def rolling_ball_subtraction_hazen(img, RADIUS=10, SIGMA=3):
     rb = PyRollingBall(ball_radius=RADIUS, smoothing_sigma=SIGMA)
     f = partial(rb.estimateBG)
