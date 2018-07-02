@@ -130,7 +130,7 @@ def morphological(labels, func='grey_opening', size=3, iterations=1):
 def watershed_divide(labels, regmax=10, min_size=100):
     """
     divide objects in labels with watershed segmentation.
-        regmax: 
+        regmax:
         min_size: objects smaller than this size will not be divided.
     """
     from utils.subdetect_utils import watershed_labels
@@ -141,3 +141,28 @@ def watershed_divide(labels, regmax=10, min_size=100):
     ws_large += labels.max()
     ws_large[ws_large == labels.max()] = 0
     return labels + ws_large
+
+
+def cytoplasm_levelset(labels, img, niter=20, dt=-0.5):
+    """
+    Supply nuclear labels and probability map for cell membrane.
+    It will expand using level sets method from nuclei to membrane.
+    """
+    from skimage.morphology import closing, disk, remove_small_holes
+    from utils.dlevel_set import dlevel_set
+    phi = labels.copy()
+    phi[labels == 0] = 1
+    phi[labels > 0] = -1
+
+    outlines = img.copy()
+    outlines = -outlines
+    outlines = outlines - outlines.min()
+    outlines = outlines/outlines.max()
+
+    mask = outlines < 0.5
+    phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)
+
+    labels = label(remove_small_holes(label(phi < 0)))
+    labels = closing(labels, disk(3))
+    return labels
+

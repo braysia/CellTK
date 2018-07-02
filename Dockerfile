@@ -13,6 +13,9 @@ RUN conda install matplotlib==1.5.1 \
     pypng==0.0.18 mahotas==1.4.1  opencv-python==3.2.0.7 \
     git+https://github.com/jfrelinger/cython-munkres-wrapper \
     jupyter
+RUN pip install numba notebook==5.4.1
+
+
 
 EXPOSE 8888
 WORKDIR /home
