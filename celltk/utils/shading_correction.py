@@ -46,7 +46,9 @@ def shading_correction_folder(inputfolder, outputfolder, binning=3, magnificatio
     parentfolder = inputfolder
     for dirname, subdirlist, filelist in os.walk(parentfolder):
         if 'metadata.txt' in filelist:
-            outputdir = join(outputfolder, dirname.split(parentfolder)[-1])
+            sfol_name = dirname.split(parentfolder)[-1]
+            sfol_name = sfol_name if not sfol_name.startswith('/') else sfol_name[1:]
+            outputdir = join(outputfolder, sfol_name)
             if not os.path.exists(outputdir):
                 os.makedirs(outputdir)
             with open(join(dirname, 'metadata.txt')) as mfile:
