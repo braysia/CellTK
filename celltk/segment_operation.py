@@ -92,6 +92,7 @@ def deep_unet(img, weight_path, padding=30, rad=[10, 30]):
     from utils.global_holder import holder
     with LocalPath(weight_path) as wpath:
         pimg = predict(holder.path, wpath)
+    # make this part flexible?
     cell = pimg[1] > pimg[0] * 100
     cell[pimg[1] < pimg[2] * 100] = False
     cimg = propagate_multisnakes(label(cell), img, NITER=2, lambda2=30)

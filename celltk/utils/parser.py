@@ -26,6 +26,8 @@ class ParamParser(object):
         self.param_args = param_args    
 
     def run(self):
+        if self.param_args is None:
+            return [{}]
         parameters = split_params(self.param_args[0])
         return [self.convert2dict(p) for p in parameters]
 
