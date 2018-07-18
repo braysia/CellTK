@@ -8,6 +8,8 @@ from scipy.ndimage.filters import minimum_filter
 import numpy as np
 from scipy.ndimage import morphology
 from skimage.morphology import remove_small_objects
+from utils.labels_handling import convert_labels
+
 
 np.random.seed(0)
 
@@ -162,7 +164,11 @@ def cytoplasm_levelset(labels, img, niter=20, dt=-0.5):
     mask = outlines < 0.5
     phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)
 
-    labels = label(remove_small_holes(label(phi < 0)))
-    labels = closing(labels, disk(3))
-    return labels
+    cytolabels = label(remove_small_holes(label(phi < 0)))
+    cytolabels = closing(cytolabels, disk(3))
+
+    temp = cytolabels.copy()
+    temp[labels == 0] = 0
+    cytolabels = convert_labels(temp, labels, cytolabels)
+    return cytolabels
 

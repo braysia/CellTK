@@ -236,3 +236,18 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     img = np_arithmetic(img, 'max')
     return img
 
+
+def deep_unet(img, weight_path, region=1):
+    """
+    weight_path can be either local path or url.
+    Setting region as None will save a stack of float32 images.
+    """
+    from utils.unet_predict import predict
+    from segment import clean_labels
+    from subdetect_operation import propagate_multisnakes
+    from utils.file_io import LocalPath
+    from utils.global_holder import holder
+    with LocalPath(weight_path) as wpath:
+        pimg = predict(holder.path, wpath)
+    pimg = np.moveaxis(pimg, 0, -1)
+    return pimg[:, :, region]
