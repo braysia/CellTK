@@ -238,9 +238,16 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
 
 
 def deep_unet(img, weight_path, region=1):
-    """
-    weight_path can be either local path or url.
-    Setting region as None will save a stack of float32 images.
+""" Generates a probability map of cells using the UNet algorithm. 
+
+    Args:
+        img (numpy.ndarray): image that will be segmented 
+        weight_path (string): path to weights file in .hdf5 format, can either bea local path or url. 
+        region (int): determines if each image will be saved individually (region =1) or 
+            setting region as None will save a stack of float32 images.
+    Returns:
+        pimg (numpy.ndarray): probability map image 
+        
     """
     from utils.unet_predict import predict
     from utils.file_io import LocalPath
