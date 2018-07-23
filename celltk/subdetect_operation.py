@@ -145,30 +145,44 @@ def watershed_divide(labels, regmax=10, min_size=100):
     return labels + ws_large
 
 
-def cytoplasm_levelset(labels, img, niter=20, dt=-0.5):
-    """
-    Supply nuclear labels and probability map for cell membrane.
-    It will expand using level sets method from nuclei to membrane.
+def cytoplasm_levelset(labels, img, niter=20, dt=-0.5, thres=0.5):
+    """ Segment cytoplasm from supplied nuclear labels and probability map 
+        Expand using level sets method from nuclei to membrane.
+        Uses an implementation of Level set method. See: 
+        https://wiseodd.github.io/techblog/2016/11/05/levelset-method/
+    
+    Args:
+        labels (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): probability map 
+        niter (int): step size to expand mask, number of iterations to run the levelset algorithm
+        dt (float): negative values for porgation, positive values for shrinking 
+        thres (float): threshold of probability value to extend the nuclear mask to
+    
+    Returns:
+        cytolabels (numpy.ndarray): cytoplasm mask labels  
+
     """
     from skimage.morphology import closing, disk, remove_small_holes
     from utils.dlevel_set import dlevel_set
-    phi = labels.copy()
-    phi[labels == 0] = 1
-    phi[labels > 0] = -1
 
-    outlines = img.copy()
-    outlines = -outlines
-    outlines = outlines - outlines.min()
-    outlines = outlines/outlines.max()
+    phi = labels.copy() 
+    phi[labels == 0] = 1 
+    phi[labels > 0] = -1 
 
-    mask = outlines < 0.5
-    phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)
+    outlines = img.copy() 
+    outlines = -outlines 
+    outlines = outlines - outlines.min() 
+    outlines = outlines/outlines.max() 
 
-    cytolabels = label(remove_small_holes(label(phi < 0)))
-    cytolabels = closing(cytolabels, disk(3))
+    mask = outlines < thres 
+    phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)  
+ 
+    cytolabels = label(remove_small_holes(label(phi < 0))) 
+    cytolabels = closing(labels, disk(3))
 
     temp = cytolabels.copy()
     temp[labels == 0] = 0
     cytolabels = convert_labels(temp, labels, cytolabels)
+
     return cytolabels
 
