@@ -17,21 +17,22 @@ def labels_map(lb0, lb1):
 
 
 def convert_labels(lb_ref_to, lb_ref_from, lb_convert):
-    """
-    lb_ref_to: 
-    lb_ref_from: 
-    lb_convert: a labeled image to be converted.
+    """ Maps a reference set of labels onto another set of labels for the same image 
+         Example: Separate segmentation of two objects in an image (nucleus and cytoplasm) leads
+         to different labels and can reconcile the same cell to have the same label for both 
+         objects. 
+    Args:
+        lb_ref_to (np.ndarray): image with object labels to convert to 
+        lb_ref_from (np.ndarray): image with object labels to be converted 
+        lb_convert (np.ndarray): the labeled image to be converted
+
+    Returns:
+        arr (numpy.ndarray): converted labels for objects with reference set of labels 
+
     """
     lbmap_to, lbmap_from = zip(*labels_map(lb_ref_to, lb_ref_from))
     arr = np.zeros(lb_convert.shape, dtype=np.uint16)
     lb = lb_convert.copy()
-
     for n0, n1 in zip(lbmap_to, lbmap_from):
-        arr[lb == n1] = n0
-        lb[lb == n1] = 0
-
-    remained = label(lb)
-    remained = remained + arr.max()
-    remained[remained == arr.max()] = 0
-    arr = arr + remained
+        arr[lb == n0] = n1
     return arr

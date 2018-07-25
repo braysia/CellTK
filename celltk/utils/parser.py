@@ -1,9 +1,56 @@
 import re
 import ast
 import __builtin__
+import ast
+import argparse
+
+
+def split_params(inputs):
+    if "/" not in inputs:
+        return [inputs]
+    store = []
+    li = []
+    while inputs:
+        element = inputs.pop(0)
+        if element == "/":
+            store.append(li)
+            li = []
+        else:
+            li.append(element)
+    store.append(li)
+    return store
 
 
 class ParamParser(object):
+    def __init__(self, param_args):
+        self.param_args = param_args    
+
+    def run(self):
+        if self.param_args is None:
+            return [{}]
+        parameters = split_params(self.param_args[0])
+        return [self.convert2dict(p) for p in parameters]
+
+    def convert2dict(self, param):
+        dictargs = dict(e.split('=') for e in param)
+        for key, value in dictargs.iteritems():
+            if value[0].isdigit():
+                dictargs[key] = ast.literal_eval(value)
+            elif value[0]=='[':
+                try:
+                    dictargs[key] = ast.literal_eval(value)
+                except:
+                    temp = []
+                    for i in value[1:-1].split(','):
+                        if i.isdigit():
+                            temp.append(ast.literal_eval(i))
+                        else:
+                            temp.append(i)
+                    dictargs[key] = temp
+        return dictargs
+        
+
+class ParamParser1(object):
     def __init__(self, param_args):
         self.param_args = param_args
 

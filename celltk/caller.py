@@ -7,6 +7,7 @@ from logging import FileHandler, StreamHandler
 import yaml
 import multiprocessing
 from utils.file_io import make_dirs
+print 'test celltk'
 import sys
 
 logger = logging.getLogger(__name__)

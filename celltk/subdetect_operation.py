@@ -8,6 +8,8 @@ from scipy.ndimage.filters import minimum_filter
 import numpy as np
 from scipy.ndimage import morphology
 from skimage.morphology import remove_small_objects
+from utils.labels_handling import convert_labels
+from utils.subdetect_utils import label_high_pass, label_nearest
 
 np.random.seed(0)
 
@@ -130,7 +132,7 @@ def morphological(labels, func='grey_opening', size=3, iterations=1):
 def watershed_divide(labels, regmax=10, min_size=100):
     """
     divide objects in labels with watershed segmentation.
-        regmax: 
+        regmax:
         min_size: objects smaller than this size will not be divided.
     """
     from utils.subdetect_utils import watershed_labels
@@ -141,3 +143,68 @@ def watershed_divide(labels, regmax=10, min_size=100):
     ws_large += labels.max()
     ws_large[ws_large == labels.max()] = 0
     return labels + ws_large
+
+
+def cytoplasm_levelset(labels, img, niter=20, dt=-0.5, thres=0.5):
+    """ Segment cytoplasm from supplied nuclear labels and probability map 
+        Expand using level sets method from nuclei to membrane.
+        Uses an implementation of Level set method. See: 
+        https://wiseodd.github.io/techblog/2016/11/05/levelset-method/
+    
+    Args:
+        labels (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): probability map 
+        niter (int): step size to expand mask, number of iterations to run the levelset algorithm
+        dt (float): negative values for porgation, positive values for shrinking 
+        thres (float): threshold of probability value to extend the nuclear mask to
+    
+    Returns:
+        cytolabels (numpy.ndarray): cytoplasm mask labels  
+
+    """
+    from skimage.morphology import closing, disk, remove_small_holes
+    from utils.dlevel_set import dlevel_set
+    phi = labels.copy()
+    phi[labels == 0] = 1
+    phi[labels > 0] = -1
+
+    outlines = img.copy()
+    outlines = -outlines
+    outlines = outlines - outlines.min()
+    outlines = outlines/outlines.max()
+
+    mask = outlines < thres
+    phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)
+
+    cytolabels = label(remove_small_holes(label(phi < 0)))
+    cytolabels = closing(cytolabels, disk(3))
+
+    temp = cytolabels.copy()
+    temp[labels == 0] = 0
+    cytolabels = convert_labels(temp, labels, cytolabels)
+    return cytolabels
+
+def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=100, CLOSE=20, THRESCHANGE=1000, MINAREA=5):
+   """ Segment bacteria and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+   if labels.any():
+           labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc)
+   from skimage.morphology import remove_small_objects
+   labels = remove_small_objects(labels, MINAREA)
+   return labels.astype(np.uint16)
+

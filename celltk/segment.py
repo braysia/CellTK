@@ -60,11 +60,10 @@ def main():
     parser.add_argument("-o", "--output", help="output directory",
                         type=str, default='temp')
     parser.add_argument("-f", "--functions", help="functions", nargs="*", default=None)
-    parser.add_argument("-p", "--param", nargs="*", help="parameters", default=[])
+    parser.add_argument('-p', '--param', nargs='+', help='parameters', action='append')
     args = parser.parse_args()
 
     params = ParamParser(args.param).run()
-
     if args.functions is None:
         print help(segment_operation)
         return
