@@ -164,25 +164,23 @@ def cytoplasm_levelset(labels, img, niter=20, dt=-0.5, thres=0.5):
     """
     from skimage.morphology import closing, disk, remove_small_holes
     from utils.dlevel_set import dlevel_set
+    phi = labels.copy()
+    phi[labels == 0] = 1
+    phi[labels > 0] = -1
 
-    phi = labels.copy() 
-    phi[labels == 0] = 1 
-    phi[labels > 0] = -1 
+    outlines = img.copy()
+    outlines = -outlines
+    outlines = outlines - outlines.min()
+    outlines = outlines/outlines.max()
 
-    outlines = img.copy() 
-    outlines = -outlines 
-    outlines = outlines - outlines.min() 
-    outlines = outlines/outlines.max() 
+    mask = outlines < thres
+    phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)
 
-    mask = outlines < thres 
-    phi = dlevel_set(phi, outlines, niter=niter, dt=dt, mask=mask)  
- 
-    cytolabels = label(remove_small_holes(label(phi < 0))) 
-    cytolabels = closing(labels, disk(3))
+    cytolabels = label(remove_small_holes(label(phi < 0)))
+    cytolabels = closing(cytolabels, disk(3))
 
     temp = cytolabels.copy()
     temp[labels == 0] = 0
     cytolabels = convert_labels(temp, labels, cytolabels)
-
     return cytolabels
 

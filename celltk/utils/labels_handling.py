@@ -34,11 +34,5 @@ def convert_labels(lb_ref_to, lb_ref_from, lb_convert):
     arr = np.zeros(lb_convert.shape, dtype=np.uint16)
     lb = lb_convert.copy()
     for n0, n1 in zip(lbmap_to, lbmap_from):
-        arr[lb == n1] = n0
-        lb[lb == n1] = 0
-
-    remained = label(lb)
-    remained = remained + arr.max()
-    remained[remained == arr.max()] = 0
-    arr = arr + remained
+        arr[lb == n0] = n1
     return arr
