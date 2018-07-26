@@ -28,8 +28,8 @@ def predict(img_path, weight_path):
     predictions = [predictions[0, :, :, i] for i in range(predictions.shape[-1])]
 
     # resize predictions to match image dimensions (i.e. remove padding)
-    height = predictions[0].shape()[0]
-    width = predictions[0].shape()[0]
+    height = np.shape(predictions[0])[0]
+    width = np.shape(predictions[0])[1]
     predictions = [p[hpadding[0]:height-hpadding[1], wpadding[0]:width-wpadding[1]] for p in predictions]
 
     predictions = normalize_predictions(predictions)
