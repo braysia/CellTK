@@ -238,7 +238,7 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
 
 
 def deep_unet(img, weight_path, region=1):
-""" Generates a probability map of cells using the UNet algorithm. 
+    """ Generates a probability map of cells using the UNet algorithm. 
 
     Args:
         img (numpy.ndarray): image that will be segmented 
