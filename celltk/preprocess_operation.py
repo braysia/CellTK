@@ -227,6 +227,19 @@ def shading_correction(img,
     img = correct_shade(img, ref, darkref, ch)
     return img
 
+def correct_uneven_illumination(img, bkgimg='Pos1/min_stack.tif'):
+    '''
+    correct_uneven_illumination
+    bkgimg is background image such as blank image or minimum projection result.
+    '''
+    img = img.astype(np.float)
+    bg = gaussian_blur(imread(bkgimg), 3)
+    bg = bg.astype(np.float)
+    d0 = img - bg
+    d0[d0 < 0] = 0
+    m_bg = 1 / (bg / bg.max()) # nega image of background
+    img = d0 * m_bg
+    return imgq
 
 def background_subtraction_wavelet(img, level=7, OFFSET=10):
     '''
