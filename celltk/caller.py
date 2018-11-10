@@ -1,4 +1,3 @@
-
 import argparse
 from os.path import join, isdir, exists
 from glob import glob
@@ -7,7 +6,6 @@ from logging import FileHandler, StreamHandler
 import yaml
 import multiprocessing
 from utils.file_io import make_dirs
-print 'test celltk'
 import sys
 
 logger = logging.getLogger(__name__)

@@ -239,7 +239,7 @@ def correct_uneven_illumination(img, bkgimg='Pos1/min_stack.tif'):
     d0[d0 < 0] = 0
     m_bg = 1 / (bg / bg.max()) # nega image of background
     img = d0 * m_bg
-    return imgq
+    return img
 
 def background_subtraction_wavelet(img, level=7, OFFSET=10):
     '''
@@ -282,4 +282,8 @@ def rolling_ball(img, RADIUS=30):
                                      use_paraboloid=False, do_presmooth=True, create_background=False)
     return img
 
-
+def bleedthourh_correction(img, BT=0.0):
+    img0 = img[:, :, 0].astype(np.float)
+    img1 = img[:, :, 1].astype(np.float)
+    img0 = img0 - img1 * BT
+    return img0
