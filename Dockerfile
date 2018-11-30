@@ -15,7 +15,7 @@ RUN conda install matplotlib==1.5.1 \
     jupyter
 RUN pip install numba notebook==5.4.1
 RUN pip install fast-histogram
-
+RUN pip install keras==2.0.0 tensorflow==1.8.0
 
 
 EXPOSE 8888
