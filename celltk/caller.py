@@ -7,7 +7,6 @@ from logging import FileHandler, StreamHandler
 import yaml
 import multiprocessing
 from utils.file_io import make_dirs
-print 'test celltk'
 import sys
 
 logger = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ def run_operation(output_dir, operation):
     functions, params, images, labels, output = parse_operation(operation)
     inputs = prepare_path_list(images, output_dir)
     logger.info(inputs)
-    
+
     inputs_labels = prepare_path_list(labels, output_dir)
     output = join(output_dir, output) if output else output_dir
     caller = _retrieve_caller_based_on_function(functions[0])
