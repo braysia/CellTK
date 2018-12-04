@@ -1,5 +1,8 @@
-from medpy.metric.image import mutual_information
+from __future__ import print_function
 import SimpleITK as sitk
+from _mutinfo import mutual_information
+import numpy as np
+
 
 def offset_slice(pixels1, pixels2, i, j):
     '''Return two sliced arrays where the first slice is offset by i,j
@@ -69,12 +72,25 @@ def calc_crop_coordinates(store, shapes):
 
 
 def sitk_translation(img0, img1, off0=0, off1=0):
+    """
+
+
+
+                + off1
+                ^
+                |
+    off0 + <--- + ---> - off0
+                |
+                v
+                - off1
+
+    """
     s0, s1 = sitk.GetImageFromArray(img0), sitk.GetImageFromArray(img1)
     s0, s1 = sitk.Cast(s0, sitk.sitkFloat32), sitk.Cast(s1, sitk.sitkFloat32)
 
     R = sitk.ImageRegistrationMethod()
     R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=250)
-    R.SetOptimizerAsRegularStepGradientDescent(4.0, .01, 200 )
+    R.SetOptimizerAsRegularStepGradientDescent(4.0, .01, 200)
 
     cc = sitk.TranslationTransform(s0.GetDimension())
     cc.SetOffset([-off1, -off0])
@@ -97,3 +113,37 @@ def register_multiseeds(img0, img1, bins=250, initial=(-30, 0, 30)):
             store.append(((s0, s1), mutual_information(p1, p2, bins)))
     store.sort(key=lambda x: x[1])
     return store[-1]
+
+
+def _crop_sample_two(num, x, y, patch_h=200, patch_w=200):
+    """
+    """
+    patch_h = patch_h if patch_h % 2 else patch_h + 1
+    patch_w = patch_w if patch_w % 2 else patch_w + 1
+    coords = ([np.random.randint(patch_h, x.shape[0] - patch_h) for i in range(num)], 
+              [np.random.randint(patch_w, x.shape[1] - patch_w) for i in range(num)])
+    h, w = int(np.floor(patch_h/2)), int(np.floor(patch_w/2))
+    xstack = np.zeros((num, patch_h, patch_w), np.float32)
+    ystack = xstack.copy()
+    for n, (ch, cw) in enumerate(zip(*coords)):
+        xstack[n, :, :] = x[ch-h:ch+h+1, cw-w:cw+w+1]
+        ystack[n, :, :] = y[ch-h:ch+h+1, cw-w:cw+w+1]
+    return xstack, ystack
+
+
+def register_multiseeds_crop(img0, img1, bins=250, initial=(-30, 0, 30), num=5, patch_size=200):
+    """
+    Align two images and return jitters and the highest mutual information it finds.
+    It will crop an image into a (patch_size x patch_size) randomly and search for jitters
+    until it finds the same values twice or it reaches num attempts.
+    patch_size at least 150 is recommended.
+    """
+    img0s, img1s = _crop_sample_two(num, img0, img1, patch_size, patch_size)
+    st = []
+    for img0, img1 in zip(img0s, img1s):
+        res = register_multiseeds(img0, img1, bins=bins, initial=initial)
+        if [i for i in st if res[0] == i[0]]:
+            return res
+        st.append(res)
+    print('No overlap. It may not be the optimal alignment')
+    return sorted(st, key=lambda x:x[1])[-1]

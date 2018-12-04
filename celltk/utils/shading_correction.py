@@ -46,7 +46,9 @@ def shading_correction_folder(inputfolder, outputfolder, binning=3, magnificatio
     parentfolder = inputfolder
     for dirname, subdirlist, filelist in os.walk(parentfolder):
         if 'metadata.txt' in filelist:
-            outputdir = join(outputfolder, dirname.split(parentfolder)[-1])
+            sfol_name = dirname.split(parentfolder)[-1]
+            sfol_name = sfol_name if not sfol_name.startswith('/') else sfol_name[1:]
+            outputdir = join(outputfolder, sfol_name)
             if not os.path.exists(outputdir):
                 os.makedirs(outputdir)
             with open(join(dirname, 'metadata.txt')) as mfile:
@@ -55,9 +57,9 @@ def shading_correction_folder(inputfolder, outputfolder, binning=3, magnificatio
             for chnum, ch in enumerate(channels):
                 pathlist = glob(join(dirname, '*channel{0:03d}*'.format(chnum)))
                 for path in pathlist:
-                    if ch == 'PHASE':
-                        img = imread(path)
-                        tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))
-                    else:
+                    try:
                         img = correct_shade(imread(path), ref, darkref, ch)
-                        tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))
+                    except:
+                        print "ch might not exist as a reference."
+                        img = imread(path)
+                    tiff.imsave(join(outputdir, os.path.basename(path)), img.astype(np.float32))

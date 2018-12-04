@@ -120,7 +120,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
 
 
 def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
-                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False, SMALL_RAD=3, CANDS_LIMIT=300):
+                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False, SMALL_RAD=None, CANDS_LIMIT=300):
     """
     Adaptive segmentation by using tracking informaiton.
     Separate two objects by making a cut at the deflection. For each points on the outline,

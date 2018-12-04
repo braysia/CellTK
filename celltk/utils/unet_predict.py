@@ -3,40 +3,37 @@ import os
 import numpy as np
 from os.path import join, basename, splitext
 from tfutils import imread
-try:
-    from tensorflow.python.keras import backend
-except:
-    from tensorflow.contrib.keras.python.keras import backend
-from tfutils import convert_model_patch2full, load_model_py, make_outputdir
+from tfutils import make_outputdir, normalize
+from tfutils import pad_image, normalize_predictions
 import tifffile as tiff
+import _model_builder
 
 
-def predict(img_path, model_path, weight_path):
+def predict(img_path, weight_path):
     x = imread(img_path)
+    x = normalize(x)
 
     if x.ndim == 2:
         x = np.expand_dims(x, -1)
     elif x.ndim == 3:
         x = np.moveaxis(x, 0, -1)
     x = np.expand_dims(x, 0)
+    num_colors = x.shape[-1]
 
-    model = load_model_py(model_path)
-    model = convert_model_patch2full(model)
+    x, hpadding, wpadding = pad_image(x)
+
+    model = _model_builder.get_model(x.shape[1], x.shape[2], num_colors, activation=None)
     model.load_weights(weight_path)
+    predictions = model.predict(x, batch_size=1)
+    predictions = [predictions[0, :, :, i] for i in range(predictions.shape[-1])]
 
-    model.summary()
-    evaluate_model = backend.function(
-        [model.layers[0].input, backend.learning_phase()],
-        [model.layers[-1].output]
-        )
+    # resize predictions to match image dimensions (i.e. remove padding)
+    height = np.shape(predictions[0])[0]
+    width = np.shape(predictions[0])[1]
+    predictions = [p[hpadding[0]:height-hpadding[1], wpadding[0]:width-wpadding[1]] for p in predictions]
 
-    cc = evaluate_model([x, 0])[0]
-
-    # from tensorflow.contrib.keras import optimizers
-    # opt = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    # model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    # cc = model.predict(x)
-    return [cc[0, :, :, i] for i in range(cc.shape[-1])]
+    predictions = normalize_predictions(predictions)
+    return predictions
 
 
 def save_output(outputdir, images, pattern):
@@ -50,14 +47,13 @@ def _parse_command_line_args():
     parser = argparse.ArgumentParser(description='predict')
     parser.add_argument('-i', '--image', help='image file path')
     parser.add_argument('-w', '--weight', help='hdf5 file path')
-    parser.add_argument('-m', '--model', help='python file path with models')
     parser.add_argument('-o', '--output', default='.', help='output directory')
     return parser.parse_args()
 
 
 def _main():
     args = _parse_command_line_args()
-    images = predict(args.image, args.model, args.weight)
+    images = predict(args.image, args.weight)
     save_output(args.output, images, splitext(basename(args.image))[0])
 
 

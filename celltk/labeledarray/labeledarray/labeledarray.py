@@ -83,7 +83,7 @@ class LabeledArray(np.ndarray):
         if boolarr.all():
             return (slice(None, None, None), ) + (slice(None, None, None), ) * (self.ndim - 1)
         minidx = min(tidx) if min(tidx) > 0 else None
-        maxidx = max(tidx) if max(tidx) < self.shape[0] - 1 else None
+        maxidx = max(tidx)+1 if max(tidx)+1 < self.shape[0] else None
         if boolarr.sum() > 1:
             return (slice(minidx, maxidx, None), ) + (slice(None, None, None), ) * (self.ndim - 1)
 

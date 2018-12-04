@@ -89,3 +89,15 @@ ENV/
 .ropeproject
 
 .DS_Store
+
+# imagingdata
+data/
+
+# output
+output/
+
+# jupyter-notebook
+ipynb/
+
+# ~
+*~

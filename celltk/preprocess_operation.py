@@ -16,16 +16,16 @@ import logging
 from utils.global_holder import holder
 from utils.mi_align import calc_jitters_multiple, calc_crop_coordinates
 from utils.shading_correction import retrieve_ff_ref
-import cv2
-from utils.background_subtractor import subtract_background_rolling_ball
 from scipy.ndimage.filters import gaussian_filter
 
 logger = logging.getLogger(__name__)
 np.random.seed(0)
 
+
 def gaussian_blur(img, SIGMA=3):
     img = gaussian_filter(img, sigma=SIGMA)
     return img
+
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False):
     if NEG:
@@ -50,13 +50,14 @@ def background_subtraction_wavelet_hazen(img, THRES=100, ITER=5, WLEVEL=6, OFFSE
     img = img - back
     return convert_positive(img, OFFSET)
 
-def background_subtraction_rolling_ball_hazen(img, RADIUS=100, SIGMA=3, OFFSET=50):
+
+def rolling_ball(img, RADIUS=100, SIGMA=3, OFFSET=50):
     """Rolling ball background subtraction.
     """
     back = rolling_ball_subtraction_hazen(img.astype(np.float), RADIUS)
     img = img - back
-    #return img
     return convert_positive(img, OFFSET)
+
 
 def n4_illum_correction(img, RATIO=1.5, FILTERINGSIZE=50):
     """
@@ -83,33 +84,6 @@ def n4_illum_correction_downsample(img, DOWN=2, RATIO=1.05, FILTERINGSIZE=50, OF
 
 
 def align(img, CROP=0.05):
-    """
-    CROP (float): crop images beforehand. When set to 0.05, 5% of each edges are cropped.
-    """
-    if not hasattr(holder, "align"):
-        if isinstance(holder.inputs[0], list) or isinstance(holder.inputs[0], tuple):
-            inputs = [i[0] for i in holder.inputs]
-        else:
-            inputs = holder.inputs
-
-        img0 = imread(inputs[0])
-
-        (ch, cw) = [int(CROP * i) for i in img0.shape]
-        ch = None if ch == 0 else ch
-        cw = None if cw == 0 else cw
-
-        jitters = calc_jitters_multiple(inputs, ch, cw)
-        holder.align = calc_crop_coordinates(jitters, img0.shape)
-        logger.debug('holder.align set to {0}'.format(holder.align))
-    jt = holder.align[holder.frame]
-    logger.debug('Jitter: {0}'.format(jt))
-    if img.ndim == 2:
-        return img[jt[0]:jt[1], jt[2]:jt[3]]
-    if img.ndim == 3:
-        return img[jt[0]:jt[1], jt[2]:jt[3], :]
-
-
-def align2(img, CROP=0.05):
     """
     CROP (float): crop images beforehand. When set to 0.05, 5% of each edges are cropped.
     """
@@ -275,15 +249,28 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     img = np_arithmetic(img, 'max')
     return img
 
-def rolling_ball(img, RADIUS=30):
-    
-    img = (img/256).astype('uint8')
-    img = subtract_background_rolling_ball(img, RADIUS, light_background=False,\
-                                     use_paraboloid=False, do_presmooth=True, create_background=False)
-    return img
-
 def bleedthourh_correction(img, BT=0.0):
     img0 = img[:, :, 0].astype(np.float)
     img1 = img[:, :, 1].astype(np.float)
     img0 = img0 - img1 * BT
     return img0
+
+def deep_unet(img, weight_path, region=1):
+    """ Generates a probability map of cells using the UNet algorithm. 
+
+    Args:
+        img (numpy.ndarray): image that will be segmented 
+        weight_path (string): path to weights file in .hdf5 format, can either bea local path or url. 
+        region (int): determines if each image will be saved individually (region =1) or 
+            setting region as None will save a stack of float32 images.
+    Returns:
+        pimg (numpy.ndarray): probability map image 
+        
+    """
+    from utils.unet_predict import predict
+    from utils.file_io import LocalPath
+    from utils.global_holder import holder
+    with LocalPath(weight_path) as wpath:
+        pimg = predict(holder.path, wpath)
+    pimg = np.moveaxis(pimg, 0, -1)
+    return pimg[:, :, region]
