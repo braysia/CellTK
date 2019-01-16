@@ -23,16 +23,22 @@ def split_params(inputs):
 
 class ParamParser(object):
     def __init__(self, param_args):
-        self.param_args = param_args    
+        self.param_args = param_args
 
     def run(self):
         if self.param_args is None:
             return [{}]
         parameters = split_params(self.param_args[0])
+        print parameters
         return [self.convert2dict(p) for p in parameters]
 
     def convert2dict(self, param):
-        dictargs = dict(e.split('=') for e in param)
+        #print len(param)
+        split_param = []
+        split_param.append(tuple(param.split('=')))
+        #print split_param
+        dictargs= {k: v for (k, v) in split_param}
+        #print dictargs
         for key, value in dictargs.iteritems():
             if value[0].isdigit():
                 dictargs[key] = ast.literal_eval(value)
