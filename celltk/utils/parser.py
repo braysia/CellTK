@@ -3,21 +3,12 @@ import ast
 import __builtin__
 import ast
 import argparse
-
+import distutils.util
 
 def split_params(inputs):
     if "/" not in inputs:
         return [inputs]
-    store = []
-    li = []
-    while inputs:
-        element = inputs.pop(0)
-        if element == "/":
-            store.append(li)
-            li = []
-        else:
-            li.append(element)
-    store.append(li)
+    store = inputs.split('/')
     return store
 
 
@@ -29,17 +20,15 @@ class ParamParser(object):
         if self.param_args is None:
             return [{}]
         parameters = split_params(self.param_args[0])
-        print parameters
-        return [self.convert2dict(p) for p in parameters]
+        return [self.convert2dict(parameters) for p in parameters]
 
     def convert2dict(self, param):
-        #print len(param)
-        split_param = []
-        split_param.append(tuple(param.split('=')))
-        #print split_param
-        dictargs= {k: v for (k, v) in split_param}
-        #print dictargs
+        dictargs={}
+        for p in param:
+            param_kv = p.split('=')
+            dictargs[param_kv[0]] = param_kv[1]
         for key, value in dictargs.iteritems():
+            value = str(value)
             if value[0].isdigit():
                 dictargs[key] = ast.literal_eval(value)
             elif value[0]=='[':
@@ -53,6 +42,12 @@ class ParamParser(object):
                         else:
                             temp.append(i)
                     dictargs[key] = temp
+
+            if value == 'True':
+                dictargs[key] = bool(1)
+            elif value == 'False':
+                dictargs[key] = bool(0)
+
         return dictargs
         
 
