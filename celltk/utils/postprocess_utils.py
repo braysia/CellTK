@@ -12,7 +12,7 @@ class _RegionProperties2(_RegionProperties):
 
     @property
     def total_intensity(self):
-        return np.sum(self.intensity_image[self.image])
+        return np.sum(self.intensity_image[self.image]).astype(np.float)
 
     @property
     def x(self):
@@ -24,15 +24,15 @@ class _RegionProperties2(_RegionProperties):
 
     @property
     def median_intensity(self):
-        return np.median(self.intensity_image[self.image])
+        return np.median(self.intensity_image[self.image]).astype(np.float)
 
     @property
     def std_intensity(self):
-        return np.std(self.intensity_image[self.image])
+        return np.std(self.intensity_image[self.image]).astype(np.float)
 
     @property
     def cv_intensity(self):
-        return self.std_intensity/self.mean_intensity
+        return (self.std_intensity/self.mean_intensity).astype(np.float)
 
     @property
     def cell_id(self):
