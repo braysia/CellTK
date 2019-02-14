@@ -33,6 +33,7 @@ PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
              'eccentricity', 'major_axis_length', 'minor_axis_length', 'max_intensity',
              'mean_intensity', 'median_intensity', 'min_intensity', 'orientation',
              'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', 'parent', 'num_seg']
+MAX_NUMCELL = 100000
 
 
 def find_all_children(labels):
@@ -87,15 +88,22 @@ def df2larr(df):
     return larr
 
 
-def multi_index(cells, obj_name, ch_name):
-    frames = np.unique([i.frame for i in cells])
-    index = pd.MultiIndex.from_product([obj_name, ch_name, PROP_SAVE, frames], names=['object', 'ch', 'prop', 'frame'])
-    column_idx = pd.MultiIndex.from_product([np.unique([i.cell_id for i in cells])])
-    df = pd.DataFrame(index=index, columns=column_idx, dtype=np.float32)
-    for cell in cells:
-        for k in PROP_SAVE:
-            df[cell.cell_id].loc[obj_name, ch_name, k, cell.frame] = np.float32(getattr(cell, k))
-    return df
+def _cells2array(cells):
+    arr = np.zeros((len(cells), len(PROP_SAVE)), np.float32)
+    for cnum, cell in enumerate(cells):
+        arr[cnum, :] = [getattr(cell, k) for k in PROP_SAVE]
+    return arr
+
+
+# def multi_index(cells, obj_name, ch_name):
+#     frames = np.unique([i.frame for i in cells])
+#     index = pd.MultiIndex.from_product([obj_name, ch_name, PROP_SAVE, frames], names=['object', 'ch', 'prop', 'frame'])
+#     column_idx = pd.MultiIndex.from_product([np.unique([i.cell_id for i in cells])])
+#     df = pd.DataFrame(index=index, columns=column_idx, dtype=np.float32)
+#     for cell in cells:
+#         for k in PROP_SAVE:
+#             df[cell.cell_id].loc[obj_name, ch_name, k, cell.frame] = np.float32(getattr(cell, k))
+#     return df
 
 
 def caller(inputs_list, inputs_labels_list, output, primary, secondary):
@@ -107,10 +115,10 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
     obj_names = [basename(dirname(i[0])) for i in inputs_labels_list] if primary is None else primary
     ch_names = [basename(dirname(i[0])) for i in inputs_list] if secondary is None else secondary
 
-    store = []
     for inputs, ch in zip(inputs_list, ch_names):
         for inputs_labels, obj in zip(inputs_labels_list, obj_names):
             logger.info("Channel {0}: {1} applied...".format(ch, obj))
+            arr = np.ones((MAX_NUMCELL, len(PROP_SAVE), len(inputs)), np.float32)  * np.nan
             for frame, (path, pathl) in enumerate(zip(inputs, inputs_labels)):
                 img, labels = imread(path), lbread(pathl, nonneg=False)
                 cells = regionprops(labels, img)
@@ -118,10 +126,20 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
                     cells = add_parent(cells, labels)
                 [setattr(cell, 'frame', frame) for cell in cells]
                 cells = [Cell(cell) for cell in cells]
-                store.append(cells)
+                tarr = _cells2array(cells)
+                index = tarr[:, 1].astype(np.int32)
+                arr[index, :, frame] = tarr
 
             logger.info("\tmaking dataframe...")
-            df = multi_index([i for ii in store for i in ii], obj, ch)
+            cellids = np.where(~np.isnan(arr[:, 0, :]).all(axis=1))[0]
+            marr = np.zeros((len(cellids), arr.shape[1], arr.shape[2]))
+            for pn, i in enumerate(cellids):
+                marr[pn] = arr[i]
+            sarr = np.swapaxes(marr, 0, 2)
+            narr = sarr.reshape((sarr.shape[0]*sarr.shape[1], sarr.shape[2]), order='F')
+            index = pd.MultiIndex.from_product([obj, ch, PROP_SAVE, range(arr.shape[-1])], names=['object', 'ch', 'prop', 'frame'])
+            df = pd.DataFrame(narr, index=index, columns=cellids)
+
             if exists(join(output, 'df.csv')):
                 ex_df = pd.read_csv(join(output, 'df.csv'), index_col=['object', 'ch', 'prop', 'frame'])
                 ex_df.columns = pd.to_numeric(ex_df.columns)
