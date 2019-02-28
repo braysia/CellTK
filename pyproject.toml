@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^2.7"
-numpy = "=1.15.4"
+numpy = "=1.16.2"
 Cython = "=0.29.6"
 mock = "=2.0.0"
 tifffile = "=2018.11.6"
@@ -25,9 +25,9 @@ fast-histogram = "=0.5"
 keras = "=2.0.0"
 tensorflow = "=1.8.0"
 scipy = "=0.19.0"
-scikit-image = "=0.13.0"
+scikit-image = "=0.14.2"
 munkres = {git = "git://github.com/braysia/munkres.git", branch="master"} 
-"backports.functools_lru_cache" = "^1.5"
+#"backports.functools_lru_cache" = "^1.5"
 
 [tool.poetry.dev-dependencies]
 
