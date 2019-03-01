@@ -1,8 +1,14 @@
 from __future__ import division
 import numpy as np
-from munkres import munkres
+# from munkres import munkres
 from scipy.spatial.distance import cdist
+from scipy.optimize import linear_sum_assignment
 
+def munkres(arr):
+    temp = np.zeros(arr.shape, np.bool)
+    ind = linear_sum_assignment(arr)
+    temp[ind] = True
+    return temp
 
 def calc_ratiodiff(a, b):
     """calculate how much pairwise ratio of vector a to b.
