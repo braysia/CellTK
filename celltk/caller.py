@@ -9,7 +9,36 @@ import multiprocessing
 from utils.file_io import make_dirs
 import sys
 
+
+
 logger = logging.getLogger(__name__)
+
+import os
+from os.path import join, basename, exists, dirname
+import collections
+
+def multi_call(inputs):
+    contents = load_yaml(inputs)
+    pin = contents['PARENT_INPUT']
+    pin = pin[:-1] if pin.endswith('/') or pin.endswith('\\') else pin
+    input_dirs = [join(pin, i) for i in os.listdir(pin) if os.path.isdir(join(pin, i))]
+    contents_list = []
+    for subfolder in input_dirs:
+        conts = eval(str(contents).replace('$INPUT', subfolder))
+        conts['OUTPUT_DIR'] = join(conts['OUTPUT_DIR'], basename(subfolder))
+        contents_list.append(conts)
+    return contents_list
+
+
+def convert(data):
+    if isinstance(data, basestring):
+        return str(data)
+    elif isinstance(data, collections.Mapping):
+        return dict(map(convert, data.iteritems()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(convert, data))
+    else:
+        return data
 
 
 def extract_path(path):
@@ -119,6 +148,19 @@ def call_operations(contents):
     logging.getLogger("PIL").setLevel(logging.WARNING)
     run_operations(contents['OUTPUT_DIR'], contents['operations'])
     logger.info("Caller finished.")
+    return
+
+
+def _parallel(args):
+    '''
+    Use this function if you want to multiprocess using PARENT_INPUT argument 
+    (see input_fireworks.yml). 
+    '''
+    contents_list = multi_call(args.input[0])
+    contents_list = [convert(i) for i in contents_list]
+    pool = multiprocessing.Pool(args.cores, maxtasksperchild=1)
+    pool.map(call_operations, contents_list, chunksize=1)
+    pool.close()
 
 
 def parse_args():
@@ -133,7 +175,12 @@ def parse_args():
 def main():
     args = parse_args()
     if len(args.input) == 1:
-        single_call(args.input[0])
+        contents = load_yaml(args.input[0])
+        if "PARENT_INPUT" in contents:
+            _parallel(args)
+        else:
+            call_operations(contents)
+            # single_call(args.input[0])
     if len(args.input) > 1:
         num_cores = args.cores
         print str(num_cores) + ' started parallel'
