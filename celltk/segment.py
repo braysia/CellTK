@@ -22,10 +22,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-radius = [3, 50]
+radius = [3, 100]
 
 
-def clean_labels(labels, rad, OPEN=2):
+def clean_labels(labels, rad, OPEN=3):
     """default cleaning. Fill holes, remove small and large objects and opening.
     """
     labels = gray_fill_holes(labels)
