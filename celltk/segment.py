@@ -20,6 +20,10 @@ from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
 import logging
 
+## Added by Katie - 01/23/19 
+from scipy.ndimage.morphology import binary_fill_holes
+## 
+
 logger = logging.getLogger(__name__)
 
 radius = [3, 50]
@@ -28,7 +32,8 @@ radius = [3, 50]
 def clean_labels(labels, rad, OPEN=2):
     """default cleaning. Fill holes, remove small and large objects and opening.
     """
-    labels = gray_fill_holes(labels)
+    labels = gray_fill_holes(labels) ## original line 
+    #labels = binary_fill_holes(labels) ## Added by Katie 01/23/19 
     labels = clear_border(labels, buffer_size=2)
     labels = remove_small_objects(labels, rad[0]**2 * np.pi, connectivity=4)
     antimask = remove_small_objects(labels, rad[1]**2 * np.pi, connectivity=4)

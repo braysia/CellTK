@@ -79,12 +79,13 @@ def curvature_anisotropic_smooth(img, NUMITER=10):
 
 
 def remove_odd_addback(img, func):
-    rshape, cshape = img.shape
+    rshape, cshape, zshape = img.shape #changed KB, 03/06/19
     if not rshape % 2 == 0:
         img = img[:-1, :]
     if not cshape % 2 == 0:
         img = img[:, :-1]
-    img = func(img)
+    img=img[:,:,0] # changed KB, 03/06/19
+    img = func(img) 
     if not rshape % 2 == 0:
         output = np.zeros((img.shape[0]+1, img.shape[1]))
         output[:-1, :] = img

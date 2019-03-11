@@ -9,8 +9,9 @@ import numpy as np
 from scipy.ndimage import morphology
 from skimage.morphology import remove_small_objects
 from utils.labels_handling import convert_labels
-from utils.subdetect_utils import label_high_pass, label_nearest
-
+from utils.subdetect_utils import label_high_pass, label_nearest, label_nearest_fixed, label_nearest_sep_bacs, repair_sal 
+from utils.global_holder import holder
+from segment_operation import constant_thres
 np.random.seed(0)
 
 
@@ -184,7 +185,7 @@ def cytoplasm_levelset(labels, img, niter=20, dt=-0.5, thres=0.5):
     cytolabels = convert_labels(temp, labels, cytolabels)
     return cytolabels
 
-def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=100, CLOSE=20, THRESCHANGE=1000, MINAREA=5):
+def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
    """ Segment bacteria and assign to closest nucleus
 
     Args:
@@ -203,8 +204,146 @@ def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=100, CLOSE=20, THRESCHANG
     """
    labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
    if labels.any():
-           labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc)
+        labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
    from skimage.morphology import remove_small_objects
    labels = remove_small_objects(labels, MINAREA)
    return labels.astype(np.uint16)
 
+def segment_bacteria_cst_filter(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
+   """ Segment bacteria and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+   labels = constant_thres(img, THRES=THRES)
+   if labels.any():
+        labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
+   from skimage.morphology import remove_small_objects
+   labels = remove_small_objects(labels, MINAREA)
+   return labels.astype(np.uint16)
+
+def segment_bacteria_separate_spots(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
+   """ Segment bacteria and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+   if labels.any():
+        labels, comb, nuc_prop, nuc_loc = label_nearest_sep_bacs(img, labels, nuc,dist)
+   from skimage.morphology import remove_small_objects
+   labels = remove_small_objects(labels, MINAREA)
+   return labels.astype(np.uint16)
+
+def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
+   """ Segment bacteria and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+   if labels.any():
+        labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
+   from skimage.morphology import remove_small_objects
+   labels = remove_small_objects(labels, MINAREA)
+   labels = comb - labels 
+   return labels.astype(np.uint16)
+
+def segment_bacteria_no_near(img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
+   """ Segment bacteria and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+   return labels.astype(np.uint16)
+
+def phage_image_only_under_bac(bac,img):
+    indices = bac==0
+    print indices 
+    img[indices]=0 # set regions where there's no bacteria to 0 
+    return img.astype(float)
+
+def remove_bac_from_img(img,label):
+    new_image = np.zeros(img.shape,np.float32)
+    coords = label > 0
+    img[coords] = 0 
+    new_image = img 
+    return new_image
+
+
+def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
+   """ Segment bacteria and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+   if labels.any():
+        labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
+        if not hasattr(holder,'plabel'): #not sure what this is doing
+            holder.plabel = labels
+            holder.pcomb = comb
+            holder.pimg = img 
+            return labels
+            #.astype(np.unit16)
+        labels = repair_sal(img, holder.pimg,comb, holder.pcomb,labels,nuc_prop,nuc_loc,THRESCHANGE)
+   from skimage.morphology import remove_small_objects
+   labels = remove_small_objects(labels, MINAREA)
+   return labels
+   #labels.astype(np.uint16)

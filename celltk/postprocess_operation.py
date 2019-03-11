@@ -52,6 +52,11 @@ def cut_short_traces(cells, minframe=4):
     '''
 
     '''
+    ## DELETE THIS
+    #for cell in cells:
+    #    if cell.parent is not None:
+    #        print cell.parent
+    ## DELETE THIS
     if max([i.frame for i in cells]) < minframe:
         print "minframe set to the maximum"
         minframe = max([i.frame for i in cells])
@@ -61,14 +66,20 @@ def cut_short_traces(cells, minframe=4):
     '''handle division'''
     def list_parent_daughters(cells):
         cc = [(i.parent, i.label) for i in cells if i.parent is not None]
+        #print "Number of dividing cells is:"
+        #print len(cc)
         parents = set([i[0] for i in cc])
         parents = list(parents)
+        #print parents
         store = []
         for pt in parents:
             daughters = [i[1] for i in cc if i[0] == pt]
             store.append([pt] + daughters)
+        #print store 
         return store
+
     pdsets = list_parent_daughters(cells)
+    #print pdsets
     for pdset in pdsets:
         p0 = traces.pop([n for n, i in enumerate(traces) if pdset[0] == i[-1].label][0])
         d0 = traces.pop([n for n, i in enumerate(traces) if pdset[1] == i[0].label][0])
@@ -102,8 +113,14 @@ def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
     half_massdiff = massdiff + 0.5
 
     withinarea = dist < DISPLACEMENT
+    #print "WITHINAREA"
+    #print withinarea
     inframe = (framediff <= maxgap) * (framediff >= 1)
+    #print "INFRAME"
+    #print inframe
     halfmass = abs(half_massdiff) < DIVISIONMASSERR
+    #print "HALFMASS"
+    #print halfmass
 
     withinarea_inframe_halfmass = withinarea * inframe * halfmass
 
@@ -119,5 +136,6 @@ def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
             dis_cell = trhandler.disappeared()[disi]
             app_cell = trhandler.appeared()[appi]
             app_cell.parent = dis_cell.label
+            #print app_cell.parent
             # dis_cell.nxt = app_cell
     return convert_traces_to_storage(trhandler.traces + store_singleframe)

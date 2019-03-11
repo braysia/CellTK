@@ -8,6 +8,24 @@ import numpy as np
 from scipy.ndimage import gaussian_laplace, binary_dilation, binary_opening, binary_closing
 np.random.seed(0)
 
+def constant_thres_unet(img, THRES=2000, region=None):
+    """take pixel above THRES as a foreground.
+
+    Examples:
+        >>> img = np.zeros((3, 3))
+        >>> img[0, 0] = 10
+        >>> img[2, 2] = 10
+        >>> example_thres(img, None, THRES=5)
+        array([[1, 0, 0],
+               [0, 0, 0],
+               [0, 0, 2]])
+    """
+    print type(img)
+    print img.shape
+    new_img = img.copy()
+    new_img = new_img[:,:,region]
+    return label(new_img > THRES)
+
 
 def constant_thres(img, THRES=2000, NEG=False):
     """take pixel above THRES as a foreground.
