@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "celltk"
+version = "v0.2"
+description = ""
+authors = ["Takamasa Kudo"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^2.7"
+numpy = "=1.15.4"
+Cython = "=0.29.6"
+mock = "=2.0.0"
+tifffile = "=2018.11.6"
+pandas = "=0.18.1"
+pymorph = "=0.96"
+PyWavelets = "=1.0.1"
+SimpleITK = "=1.1.0"
+centrosome = "=1.0.5"
+joblib = "=0.10.2"
+pypng = "=0.0.18"
+mahotas = "=1.4.1"
+opencv-python = "=3.2.0.7"
+numba = "^0.42.1"
+fast-histogram = "=0.5"
+keras = "=2.0.0"
+tensorflow = "=1.8.0"
+scipy = "=0.19.0"
+scikit-image = "=0.14.2"
+#munkres = {git = "git://github.com/braysia/munkres.git", branch="master"} 
+"backports.functools_lru_cache" = "^1.5"
+"backports.weakref" = "^1.0"
+matplotlib = "=2.1.1"
+subprocess32 = "^3.5"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+celltk = "celltk.caller:main"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

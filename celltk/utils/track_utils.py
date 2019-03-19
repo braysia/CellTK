@@ -1,7 +1,10 @@
 from __future__ import division
 import numpy as np
-from munkres import munkres
 from scipy.spatial.distance import cdist
+try:
+    from munkres import munkres
+except:
+    from _munkres import munkres
 
 
 def calc_ratiodiff(a, b):
@@ -19,7 +22,7 @@ def calc_diff(a, b):
 
 
 def calc_massdiff(cells0, cells1):
-    return calc_ratiodiff([i.total_intensity for i in cells0], [i.total_intensity for i in cells1])
+    return calc_ratiodiff([i.total_intensity.astype(np.float) for i in cells0], [i.total_intensity.astype(np.float) for i in cells1])
 
 
 def find_one_to_one_assign(cost):

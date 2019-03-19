@@ -72,7 +72,7 @@ def adaptive_thresh(img, R=1, FILTERINGSIZE=50):
     least 10% brighter than the blurred image.
     """
     fim = gaussian_filter(img, FILTERINGSIZE)
-    bw = img > (fim * (1 + R/100))
+    bw = img > (fim * (1. + R/100.))
     return bw
 
 

@@ -27,12 +27,16 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 logger = logging.getLogger(__name__)
 
+# We should be able to provide this as configuration when booting CellTK 
+#PROP_SAVE = ['area', 'cell_id','max_intensity','mean_intensity', 'median_intensity','total_intensity', 'x', 'y'] #'convex_area', 'cv_intensity',
+#             #'eccentricity', 'major_axis_length', 'minor_axis_length', ,
+#             #, 'min_intensity', 'orientation',
+#            # 'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', #'parent', #'num_seg']
 
-
-PROP_SAVE = ['area', 'cell_id','max_intensity','mean_intensity', 'median_intensity','total_intensity', 'x', 'y'] #'convex_area', 'cv_intensity',
-             #'eccentricity', 'major_axis_length', 'minor_axis_length', ,
-             #, 'min_intensity', 'orientation',
-            # 'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', #'parent', #'num_seg']
+PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
+             'eccentricity', 'major_axis_length', 'minor_axis_length', 'max_intensity',
+             'mean_intensity', 'median_intensity', 'min_intensity', 'orientation',
+             'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', 'parent', 'num_seg']
 MAX_NUMCELL = 100000
 
 
