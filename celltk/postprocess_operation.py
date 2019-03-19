@@ -67,7 +67,6 @@ def cut_short_traces(cells, minframe=4):
             daughters = [i[1] for i in cc if i[0] == pt]
             store.append([pt] + daughters)
         return store
-
     pdsets = list_parent_daughters(cells)
     traces = construct_traces_based_on_next(cells)
     for pdset in pdsets:
@@ -122,6 +121,5 @@ def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
             dis_cell = dis_cells[disi]
             app_cell = app_cells[appi]
             app_cell.parent = dis_cell.label
-            #print app_cell.parent
             # dis_cell.nxt = app_cell
     return convert_traces_to_storage(trhandler.traces + store_singleframe)
