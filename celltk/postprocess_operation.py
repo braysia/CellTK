@@ -60,16 +60,12 @@ def cut_short_traces(cells, minframe=4):
     '''handle division'''
     def list_parent_daughters(cells):
         cc = [(i.parent, i.label) for i in cells if i.parent is not None]
-        #print "Number of dividing cells is:"
-        #print len(cc)
         parents = set([i[0] for i in cc])
         parents = list(parents)
-        #print parents
         store = []
         for pt in parents:
             daughters = [i[1] for i in cc if i[0] == pt]
             store.append([pt] + daughters)
-        #print store 
         return store
 
     pdsets = list_parent_daughters(cells)
@@ -106,14 +102,8 @@ def detect_division(cells, DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15):
     half_massdiff = massdiff + 0.5
 
     withinarea = dist < DISPLACEMENT
-    #print "WITHINAREA"
-    #print withinarea
     inframe = (framediff <= maxgap) * (framediff >= 1)
-    #print "INFRAME"
-    #print inframe
     halfmass = abs(half_massdiff) < DIVISIONMASSERR
-    #print "HALFMASS"
-    #print halfmass
 
     withinarea_inframe_halfmass = withinarea * inframe * halfmass
 
