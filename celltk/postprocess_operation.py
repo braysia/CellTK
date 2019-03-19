@@ -53,11 +53,6 @@ def cut_short_traces(cells, minframe=4):
     '''
 
     '''
-    ## DELETE THIS
-    #for cell in cells:
-    #    if cell.parent is not None:
-    #        print cell.parent
-    ## DELETE THIS
     if max([i.frame for i in cells]) < minframe:
         print "minframe set to the maximum"
         minframe = max([i.frame for i in cells])
