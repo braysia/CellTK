@@ -47,7 +47,7 @@ def background_subtraction_wavelet_hazen(img, THRES=100, ITER=5, WLEVEL=6, OFFSE
     """Wavelet background subtraction.
     """
     back = wavelet_subtraction_hazen(img.astype(np.float), ITER=ITER, THRES=THRES, WLEVEL=WLEVEL)
-    img = img[:,:,0] #added Katie, 3/6/19
+    img = img[:,:,0] #added Katie to resolve issue with 3D numpy arrays 3/6/19
     img = img - back
     return convert_positive(img, OFFSET)
 
@@ -95,20 +95,15 @@ def align(img, CROP=0.05):
             inputs = holder.inputs
 
         img0 = imread(inputs[0])
-        # read in the image 
 
         (ch, cw) = [int(CROP * i) for i in img0.shape]
-        # figure out how big the new images should be based on the cropping
 
         ch = None if ch == 0 else ch
         cw = None if cw == 0 else cw
 
         jitters = calc_jitters_multiple(inputs, ch, cw)
-        # figuring out how much image has moved 
 
         holder.align = calc_crop_coordinates(jitters, img0.shape)
-        # figure out cropping of each image 
-        
         logger.debug('holder.align set to {0}'.format(holder.align))
     jt = holder.align[holder.frame]
     logger.debug('Jitter: {0}'.format(jt))
@@ -119,7 +114,7 @@ def align(img, CROP=0.05):
 
 def crop_60(img, CROP=0.77):
     """
-    CROP (float): crop images beforehand. When set to 0.05, 5% of each edges are cropped.
+    CROP (float): crop images beforehand. When set to 0.77, middle 60% of image is kept
     """
     dim =  img.shape
     x_orig = float(img.shape[0])
@@ -160,7 +155,7 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp
     for path in store:
         ff_store.append(imread(path))
     ff = np.median(np.dstack(ff_store), axis=2)
-    ff = np.squeeze(ff) ## added to fix bug in new version of numpy
+    ff = np.squeeze(ff) # added by Katie to fix bug in new version of numpy
 
     if exp_corr:
         """If a reference is taken at different exposure, or exposure is not stable over time,
@@ -180,7 +175,7 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp
         holder.bg_corr = ret.x
         ff = ret.x * ff
 
-    img = np.squeeze(img)
+    img = np.squeeze(img) # added by Katie to fix bug in new version of numpy 
     img = img - ff
     img[img < 0] = np.nan
     img = interpolate_nan(img)
@@ -244,7 +239,7 @@ def background_subtraction_wavelet(img, level=7, OFFSET=10):
             return img
         wp = WaveletPacket2D(data=img.astype(np.uint16), wavelet='haar', mode='sym')
         back = resize(np.array(wp['a'*level].data), img.shape, order=3, mode='reflect')/(2**level)
-        img = img[:,:,0] # addded KB 3/6/19
+        img = img[:,:,0] # addded KB 3/6/19 to fix bug in new version of numpy 
         img = img - back
         return img
     img = wavelet_subtraction(img, level)
@@ -267,7 +262,7 @@ def stitch_images(img, POINTS=[(0,0),(0,0),(0,0),(0,0)]):
     return img
 
 
-def deep_unet(img, weight_path, region=1): #region1 is what there was before that gives outline, region 2 gives the other one 
+def deep_unet(img, weight_path, region=1):
     """ Generates a probability map of cells using the UNet algorithm. 
 
     Args:
@@ -286,5 +281,3 @@ def deep_unet(img, weight_path, region=1): #region1 is what there was before tha
         pimg = predict(holder.path, wpath)
     pimg = np.moveaxis(pimg, 0, -1)
     return pimg[:, :, region]
-    #return pimg[:,:,1:3]
-
