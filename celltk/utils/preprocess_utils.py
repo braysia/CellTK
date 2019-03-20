@@ -84,7 +84,7 @@ def remove_odd_addback(img, func):
         img = img[:-1, :]
     if not cshape % 2 == 0:
         img = img[:, :-1]
-    img=img[:,:,0] # added by KB to be compatible with a numpy update issue 
+    img = img[:,:,0] # added by KB to be compatible with a numpy update issue 
     img = func(img) 
     if not rshape % 2 == 0:
         output = np.zeros((img.shape[0]+1, img.shape[1]))
