@@ -9,7 +9,7 @@ import numpy as np
 from scipy.ndimage import morphology
 from skimage.morphology import remove_small_objects
 from utils.labels_handling import convert_labels
-from utils.subdetect_utils import label_high_pass, label_nearest, label_nearest_fixed, label_nearest_sep_bacs, repair_sal 
+from utils.subdetect_utils import label_high_pass, label_nearest, repair_sal 
 from utils.global_holder import holder
 from segment_operation import constant_thres
 np.random.seed(0)
@@ -259,7 +259,7 @@ def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CL
    return labels.astype(np.uint16)
 
 def segment_bacteria_no_near(img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
-   """ Segment bacteria and assign to closest nucleus
+   """ Segment all bacteria in image, don't assign to closest nucleus
 
     Args:
         nuc (numpy.ndarray): nuclear mask labels

@@ -152,8 +152,7 @@ def pairwise_distance(loc1, loc2):
 
 def skilabel(bw, conn=2):
     '''original label might label any objects at top left as 1. To get around this pad it first.'''
-    bw = np.pad(bw, pad_width=1, mode='constant', constant_values=False) ## ORIGINAL
-    #bw = np.pad(bw, pad_width=0, mode='constant', constant_values=False) ## DDED KB
+    bw = np.pad(bw, pad_width=1, mode='constant', constant_values=False) 
     label = skim_label(bw, connectivity=conn)
     label = label[1:-1, 1:-1]
     return label
@@ -176,7 +175,7 @@ def label_high_pass(img, slen=3, SIGMA=0.5, THRES=50, CLOSE=3):
     """For Salmonella"""
     cc = calc_high_pass(img, slen, SIGMA)
     cc[cc < 0] = 0
-    la = skilabel(cc > THRES, conn=1) ## KATIE 1/25/19
+    la = skilabel(cc > THRES, conn=1)
     la = closing(la, disk(CLOSE))
     return la
 
@@ -184,72 +183,22 @@ def label_high_pass(img, slen=3, SIGMA=0.5, THRES=50, CLOSE=3):
 def label_nearest(img, label, nuc, DISTHRES=25):
     """Label objects to the nearest nuc.
     """
-    nuc_prop = regionprops(nuc, img, cache=False) #extract all region props from nuc seg
-    sal_prop = regionprops(label, img, cache=False) #extract all region props from bacteria sec
-    nuc_loc = [i.centroid for i in regionprops(nuc, img, cache=False)] # pull centroid for each nucleus
-    sal_loc = [i.centroid for i in regionprops(label, img, cache=False)] # pull centrodi for each bac label 
-    dist = pairwise_distance(nuc_loc, sal_loc) # calculate distance between nucleus and e coli 
-
+    nuc_prop = regionprops(nuc, img, cache=False)
+    sal_prop = regionprops(label, img, cache=False)
+    nuc_loc = [i.centroid for i in regionprops(nuc, img, cache=False)]
+    sal_loc = [i.centroid for i in regionprops(label, img, cache=False)]
+    dist = pairwise_distance(nuc_loc, sal_loc)
     min_dist_arg = np.argmin(dist, axis=0) 
 
     template = np.zeros(img.shape, np.uint16)
     for num, (idx, sal) in enumerate(zip(min_dist_arg, sal_prop)):
         if dist[idx, num] < DISTHRES:
-            template[sal.coords[:, 0], sal.coords[:, 1]] = nuc_prop[idx].label ### IS IT FINDING EVERYTHING IDENTIFIED?? 
-    comb = np.max(np.dstack((template, nuc)), axis=2).astype(np.uint16)
-    return template, comb, nuc_prop, nuc_loc
-
-def label_nearest_sep_bacs(img, label, nuc, DISTHRES=25):
-    """Label objects to the nearest nuc.
-    """
-    nuc_prop = regionprops(nuc, img, cache=False) #extract all region props from nuc seg
-    sal_prop = regionprops(label, img, cache=False) #extract all region props from bacteria sec
-    nuc_loc = [i.centroid for i in regionprops(nuc, img, cache=False)] # pull centroid for each nucleus
-    sal_loc = [i.centroid for i in regionprops(label, img, cache=False)] # pull centrodi for each bac label 
-    dist = pairwise_distance(nuc_loc, sal_loc) # calculate distance between nucleus and e coli 
-
-    min_dist_arg = np.argmin(dist, axis=0) 
-
-    template = np.zeros(img.shape, np.uint16)
-
-    for num, (idx, sal) in enumerate(zip(min_dist_arg, sal_prop)):
-        
-        if dist[idx, num] < DISTHRES:
-            print num
-            print idx
-            print sal
-            template[sal.coords[:, 0], sal.coords[:, 1]] = nuc_prop[idx].label ### IS IT FINDING EVERYTHING IDENTIFIED?? 
-    comb = np.max(np.dstack((template, nuc)), axis=2).astype(np.uint16)
-    
-    template_2 = skim_label(template)
-    template_3 = np.zeros(img.shape,np.uint16)
-    template_props = regionprops(template_2,img,cache=False)
-    for temp in template_props:
-        template_3[temp.coords[:,0],temp.coords[:,1]] = str(template[temp.coords[0,0],temp.coords[0,1]])+str(template_2[temp.coords[0,0],temp.coords[0,1]])
-    
-    return template, template_3, comb, nuc_prop, nuc_loc
-
-def label_nearest_fixed (img, label, nuc, DISTHRES=25):
-    """Label objects to the nearest nuc.
-    """
-    nuc_prop = regionprops(nuc, img, cache=False) #extract all region props from nuc seg
-    sal_prop = regionprops(label, img, cache=False) #extract all region props from bacteria sec
-    
-    nuc_loc = [i.centroid for i in regionprops(nuc, img, cache=False)] # pull centroid for each nucleus
-    sal_loc = [i.centroid for i in regionprops(label, img, cache=False)] # pull centrodi for each bac label 
-    
-    dist = pairwise_distance(nuc_loc, sal_loc) # calculate distance between nucleus and e coli 
-    min_dist_arg = np.argmin(dist, axis=0) 
-    template = np.zeros(img.shape, np.uint16)
-    
-    for idx, sal in zip(min_dist_arg, sal_prop):
-        if 1:
             template[sal.coords[:, 0], sal.coords[:, 1]] = nuc_prop[idx].label
     comb = np.max(np.dstack((template, nuc)), axis=2).astype(np.uint16)
     return template, comb, nuc_prop, nuc_loc
 
 def judge_bad(csig, psig, THRESCHANGE):
-    ''' From Covertrack. Trying to adapt this to CellTK. 08/17/18.
+    ''' From Covertrack. Trying to adapt this to CellTK. Last updated 08/17/18. Currently not functional
     '''
     if csig - psig > THRESCHANGE:
         return True
@@ -258,7 +207,7 @@ def judge_bad(csig, psig, THRESCHANGE):
 
 
 def repair_sal(img, pimg, comb, pcomb, label, nuc_prop, nuc_loc, THRESCHANGE=1000):
-    ''' From Covertrack. Trying to adapt this to CellTK. 08/17/18.
+    ''' From Covertrack. Trying to adapt this to CellTK. Last updated 08/17/18. Currently not functional
     '''
 
     # repair
