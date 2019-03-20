@@ -27,10 +27,11 @@ def gaussian_blur(img, SIGMA=3):
     return img
 
 
-def gaussian_laplace(img, SIGMA=2.5, NEG=False):
+def gaussian_laplace(img, SIGMA=2.5, NEG=False, OFFSET=0):
     if NEG:
         img = -calc_lapgauss(img, SIGMA)
         img[img < 0 ] = 0
+        img += OFFSET
         return img
     return calc_lapgauss(img, SIGMA)
 

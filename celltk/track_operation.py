@@ -69,6 +69,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
     '''Linear assignment problem for mammalian cells.
     Cost matrix is simply the distance.
     costDie and costBorn are variables changing over frame. Update it through holder.
+    If you have more than 1000 cells per image, it may cause a slowdown. 
 
     Args:
     DISPLACEMENT (int): The maximum distance (in pixel)
