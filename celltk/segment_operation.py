@@ -62,7 +62,9 @@ def watershed_labels(labels, REG=10):
     """watershed to separate objects with concavity.
     Does not use intensity information but shape.
     """
-    return label_watershed(labels, regmax=REG)
+    nlabels = label_watershed(labels.copy(), regmax=REG)
+    nlabels[labels == 0] = 0
+    return nlabels
 
 
 def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, num_sigma=10):

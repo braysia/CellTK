@@ -13,7 +13,7 @@ from skimage.segmentation import clear_border
 from utils.filters import gray_fill_holes
 from skimage.morphology import remove_small_objects
 from utils.filters import label
-from scipy.ndimage.morphology import binary_opening
+from skimage.morphology import opening
 from utils.util import imread
 from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser, parse_image_files
@@ -33,7 +33,7 @@ def clean_labels(labels, rad, OPEN=3):
     labels = remove_small_objects(labels, rad[0]**2 * np.pi, connectivity=4)
     antimask = remove_small_objects(labels, rad[1]**2 * np.pi, connectivity=4)
     labels[antimask > 0] = False
-    labels = label(binary_opening(labels, np.ones((int(OPEN), int(OPEN))), iterations=1))
+    labels = opening(labels, np.ones((OPEN, OPEN)))
     return labels
 
 
