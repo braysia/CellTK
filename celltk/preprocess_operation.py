@@ -29,11 +29,11 @@ def gaussian_blur(img, SIGMA=3):
 
 def gaussian_laplace(img, SIGMA=2.5, NEG=False, OFFSET=0):
     if NEG:
-        img = -calc_lapgauss(img, SIGMA)
+        img = -calc_lapgauss(img.astype(np.float32), SIGMA)
         img[img < 0 ] = 0
         img += OFFSET
         return img
-    return calc_lapgauss(img, SIGMA)
+    return calc_lapgauss(img.astype(np.float32), SIGMA)
 
 
 def curvature_anisotropic_smooth(img, NITER=10):
