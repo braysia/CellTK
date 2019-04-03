@@ -152,7 +152,7 @@ def pairwise_distance(loc1, loc2):
 
 def skilabel(bw, conn=2):
     '''original label might label any objects at top left as 1. To get around this pad it first.'''
-    bw = np.pad(bw, pad_width=1, mode='constant', constant_values=False) 
+    bw = np.pad(bw, pad_width=1, mode='constant', constant_values=False)
     label = skim_label(bw, connectivity=conn)
     label = label[1:-1, 1:-1]
     return label
@@ -188,8 +188,7 @@ def label_nearest(img, label, nuc, DISTHRES=25):
     nuc_loc = [i.centroid for i in regionprops(nuc, img, cache=False)]
     sal_loc = [i.centroid for i in regionprops(label, img, cache=False)]
     dist = pairwise_distance(nuc_loc, sal_loc)
-    min_dist_arg = np.argmin(dist, axis=0) 
-
+    min_dist_arg = np.argmin(dist, axis=0)
     template = np.zeros(img.shape, np.uint16)
     for num, (idx, sal) in enumerate(zip(min_dist_arg, sal_prop)):
         if dist[idx, num] < DISTHRES:
