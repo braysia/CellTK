@@ -19,10 +19,9 @@ from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
 import logging
+from _setting import RUN_CLEAN, RADIUS
 
 logger = logging.getLogger(__name__)
-
-radius = [3, 100]
 
 
 def clean_labels(labels, rad, OPEN=3):
@@ -49,7 +48,7 @@ def caller(inputs, output, functions, params):
             img = func(img, **param)
         if isinstance(path, list) or isinstance(path, tuple):
             path = path[0]
-        labels = clean_labels(img, radius)
+        labels = clean_labels(img, RADIUS) if RUN_CLEAN else img
         imsave(labels, output, path, dtype=np.int16)
         logger.info("\tframe {0}: {1} objects segmented.".format(holder.frame, len(np.unique(labels))))
 

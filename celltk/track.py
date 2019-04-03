@@ -14,6 +14,7 @@ from utils.file_io import make_dirs, imsave, lbread
 from utils.parser import ParamParser
 from utils.global_holder import holder
 import logging
+from _setting import FRAME_REVTRACK
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ def neg2poslabels(labels):
 
 def caller(inputs, inputs_labels, output, functions, params):
     make_dirs(output)
+    inputs = inputs[FRAME_REVTRACK:0:-1] + inputs
+    inputs_labels = inputs_labels[FRAME_REVTRACK:0:-1] + inputs_labels
+
     img0, labels0 = imread(inputs[0]), lbread(inputs_labels[0]).astype(np.int16)
     labels0 = neg2poslabels(labels0)
     imsave(labels0, output, basename(inputs[0]), dtype=np.int16)

@@ -21,19 +21,13 @@ import pandas as pd
 import logging
 from scipy.ndimage.morphology import binary_fill_holes
 from scipy.ndimage.morphology import binary_dilation
-
 import warnings
 warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
+from _setting import PROP_SAVE, MAX_NUMCELL
+
 
 logger = logging.getLogger(__name__)
-
-
-PROP_SAVE = ['area', 'cell_id', 'convex_area', 'cv_intensity',
-             'eccentricity', 'major_axis_length', 'minor_axis_length', 'max_intensity',
-             'mean_intensity', 'median_intensity', 'min_intensity', 'orientation',
-             'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', 'parent', 'num_seg']
-MAX_NUMCELL = 100000
 
 
 def find_all_children(labels):
