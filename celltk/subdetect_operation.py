@@ -197,7 +197,7 @@ def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE
         CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
         THRESCHANGE (int): argument unnecessary? 
         MINAREA (int): minimum area in pixels for a bacterium 
-	dist (int): acceptable distance bac can be from mask 
+    dist (int): acceptable distance bac can be from mask 
     Returns:
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
@@ -221,7 +221,7 @@ def segment_bacteria_cst_filter(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, 
         CLOSE (int): Radius for disk used to return morphological closing of the image (dilation followed by erosion to remove dark spots and connect bright cracks)
         THRESCHANGE (int): argument unnecessary? 
         MINAREA (int): minimum area in pixels for a bacterium 
-	distance (int): acceptable distance bacteria can be away from mask
+    distance (int): acceptable distance bacteria can be away from mask
     Returns:
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
@@ -280,8 +280,8 @@ def segment_bacteria_no_near(img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHA
 
 def phage_image_only_under_bac(bac,img):
     """ Modify image so that only regions under bacteria mask have values and rest of pixels are set to 0 
-	bac (numpy.ndarray): bacterial mask labels
-	img (numpy.ndarray): img in any channel
+    bac (numpy.ndarray): bacterial mask labels
+    img (numpy.ndarray): img in any channel
     """
     indices = bac==0
     img[indices]=0 # set regions where there's no bacteria to 0 
@@ -289,8 +289,8 @@ def phage_image_only_under_bac(bac,img):
 
 def remove_bac_from_img(img,label):
     """ Modify an image so that regions containing bacteria have value 0 and the rest of the pixels have their original value 
-	img (numpy.ndarray): img in any channel 
-	label (numpy.ndarray): bacterial mask labels
+    img (numpy.ndarray): img in any channel 
+    label (numpy.ndarray): bacterial mask labels
     """
     new_image = np.zeros(img.shape,np.float32)
     coords = label > 0
