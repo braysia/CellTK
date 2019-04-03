@@ -19,12 +19,12 @@ from utils.file_io import make_dirs, imsave
 from utils.parser import ParamParser, parse_image_files
 from utils.global_holder import holder
 import logging
-from _setting import RUN_CLEAN, RADIUS
+from _setting import RUN_CLEAN, RADIUS, OPEN
 
 logger = logging.getLogger(__name__)
 
 
-def clean_labels(labels, rad, OPEN=3):
+def clean_labels(labels, rad):
     """default cleaning. Fill holes, remove small and large objects and opening.
     """
     labels = gray_fill_holes(labels)
