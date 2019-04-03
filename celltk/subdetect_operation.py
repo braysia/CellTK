@@ -300,7 +300,7 @@ def remove_bac_from_img(img,label):
 
 
 def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
-   """ Segment bacteria and assign to closest nucleus ## This is still under construction
+    """ Segment bacteria and assign to closest nucleus ## This is still under construction
 
     Args:
         nuc (numpy.ndarray): nuclear mask labels
