@@ -186,7 +186,7 @@ def cytoplasm_levelset(labels, img, niter=20, dt=-0.5, thres=0.5):
     return cytolabels
 
 def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
-   """ Segment bacteria using high pass filter and assign to closest nucleus
+    """ Segment bacteria using high pass filter and assign to closest nucleus
 
     Args:
         nuc (numpy.ndarray): nuclear mask labels
@@ -210,7 +210,7 @@ def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE
    return labels.astype(np.uint16)
 
 def segment_bacteria_cst_filter(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
-   """ Segment bacteria using constant threshold and assign to closest nucleus
+    """ Segment bacteria using constant threshold and assign to closest nucleus
 
     Args:
         nuc (numpy.ndarray): nuclear mask labels
@@ -259,7 +259,7 @@ def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CL
    return labels.astype(np.uint16)
 
 def segment_bacteria_no_near(img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
-   """ Segment all bacteria in image, don't assign to closest nucleus
+    """ Segment all bacteria in image, don't assign to closest nucleus
 
     Args:
         nuc (numpy.ndarray): nuclear mask labels
