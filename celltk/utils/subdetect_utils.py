@@ -195,3 +195,65 @@ def label_nearest(img, label, nuc, DISTHRES=25):
             template[sal.coords[:, 0], sal.coords[:, 1]] = nuc_prop[idx].label
     comb = np.max(np.dstack((template, nuc)), axis=2).astype(np.uint16)
     return template, comb, nuc_prop, nuc_loc
+
+def judge_bad(csig, psig, THRESCHANGE):
+    ''' From Covertrack. Trying to adapt this to CellTK. Last updated 08/17/18. Currently not functional
+    '''
+    if csig - psig > THRESCHANGE:
+        return True
+    else:
+        return False
+
+
+def repair_sal(img, pimg, comb, pcomb, label, nuc_prop, nuc_loc, THRESCHANGE=1000):
+    ''' From Covertrack. Trying to adapt this to CellTK. Last updated 08/17/18. Currently not functional
+    '''
+
+    # repair
+    prev = regionprops(pcomb, pimg, cache=False) # previous image props
+    prev_label = [i.label for i in prev] # previous image labels
+    
+    curr = regionprops(comb, img, cache=False) # current image 
+    curr_label = [i.label for i in curr] # current image labels 
+
+    store = [] 
+
+    for cell in curr: # iterate over every cell in the current image 
+
+        curr_sig = cell.mean_intensity * cell.area # the way we define a bacteria is the cell's mean intensity x area 
+        
+        if cell.label in prev_label: # if we recognize this bacteria already
+            p_cell = prev[prev_label.index(cell.label)]  # find it in the last image 
+            prev_sig = p_cell.mean_intensity * p_cell.area # store it's cell info 
+        else: # if it's a new cell, we don't care about it 
+            break
+        
+        if np.any(label == cell.label): # If we indeed found a cell across two frames, calculate it's difference in cell properties
+            store.append(curr_sig - prev_sig) #store it's change from last frame to this frame in our areaxmean metric 
+        
+        if judge_bad(curr_sig, prev_sig, THRESCHANGE):  # If it's changed more than our desired threshold [# or diff ratio?] try to assign it to a neighbor
+            print "I JUDGE BAD!"
+            print cell.label 
+            for rp in regionprops(skilabel(label == cell.label), img, cache=False): # for each property in regions props 
+                dist = pairwise_distance((rp.centroid,), nuc_loc)[0] # calculate how far bac is from nucleus 
+                for num in range(1, 4): # for 1,2,3,4 
+                    
+                    neighbor_nuc = nuc_prop[np.argsort(dist)[num]] #find the neighbor cell 
+                    neiid = neighbor_nuc.label
+                    nei_curr = curr[curr_label.index(neiid)] # find the current neighbor cell 
+                    
+                    if neiid not in prev_label: # don't bother if can't find neighbor 
+                        break
+
+                    nei_prev = prev[prev_label.index(neiid)] # find where the enighbor was in the last frame
+                    nei_curr_sig = nei_curr.mean_intensity * nei_curr.area 
+                    nei_prev_sig = nei_prev.mean_intensity * nei_prev.area
+                    
+                    if judge_bad(nei_curr_sig, nei_prev_sig, THRESCHANGE): # if the neighbor also changed by more than the treshold
+                        label[rp.coords[:, 0], rp.coords[:, 1]] = neiid # swap out the neighbors 
+                        print "I relabeled something"
+                        print cell.label
+                        break
+                    else:
+                        pass
+    return label

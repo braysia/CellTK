@@ -46,7 +46,7 @@ def initiate_cluster(inputs):
         fw_name = "cluster_celltk"
         fw = Firework(clustercelltk(contents=contents),
                       name = fw_name,
-                      spec = {"_queueadapter": {"job_name": fw_name, "walltime": "47:00:00"}},
+                      spec = {"_queueadapter": {"job_name": fw_name, "walltime": "4:00:00"}}, # changed from 47 hours. We should make this an option to choose
                       )
         wf_fws.append(fw)
     # end loop over input values

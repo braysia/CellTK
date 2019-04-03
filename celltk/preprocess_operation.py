@@ -110,6 +110,25 @@ def align(img, CROP=0.05):
     if img.ndim == 3:
         return img[jt[0]:jt[1], jt[2]:jt[3], :]
 
+def crop_60(img, CROP=0.77):
+    """
+    CROP (float): crop images beforehand. When set to 0.77, middle 60% of image is kept
+    """
+    dim =  img.shape
+    x_orig = float(img.shape[0])
+    x_dim = int(x_orig*CROP)
+    y_orig = float(img.shape[1])
+    y_dim = int(y_orig*CROP)
+    x_start = int((x_orig-x_dim)/2)
+    x_end = x_start+x_dim
+    y_start = int((y_orig-y_dim)/2)
+    y_end = y_start+y_dim 
+
+    if img.ndim == 2:
+        return img[x_start:x_end, y_start:y_end]
+    if img.ndim == 3:
+        return img[x_start:x_end, y_start:y_end, :]
+
 
 def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp_corr=False):
     """
