@@ -202,12 +202,12 @@ def segment_bacteria(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
     """
-   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
-   if labels.any():
+    labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+    if labels.any():
         labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
-   from skimage.morphology import remove_small_objects
-   labels = remove_small_objects(labels, MINAREA)
-   return labels.astype(np.uint16)
+    from skimage.morphology import remove_small_objects
+    labels = remove_small_objects(labels, MINAREA)
+    return labels.astype(np.uint16)
 
 def segment_bacteria_cst_filter(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
     """ Segment bacteria using constant threshold and assign to closest nucleus
@@ -226,15 +226,15 @@ def segment_bacteria_cst_filter(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, 
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
     """
-   labels = constant_thres(img, THRES=THRES)
-   if labels.any():
+    labels = constant_thres(img, THRES=THRES)
+    if labels.any():
         labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
-   from skimage.morphology import remove_small_objects
-   labels = remove_small_objects(labels, MINAREA)
-   return labels.astype(np.uint16)
+    from skimage.morphology import remove_small_objects
+    labels = remove_small_objects(labels, MINAREA)
+    return labels.astype(np.uint16)
 
 def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
-   """ Segment bacteria and assign to closest nucleus and return the mask back without regions containing bacteria
+    """ Segment bacteria and assign to closest nucleus and return the mask back without regions containing bacteria
 
     Args:
         nuc (numpy.ndarray): nuclear mask labels
@@ -250,13 +250,13 @@ def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CL
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
     """
-   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
-   if labels.any():
+    labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+    if labels.any():
         labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
-   from skimage.morphology import remove_small_objects
-   labels = remove_small_objects(labels, MINAREA)
-   labels = comb - labels 
-   return labels.astype(np.uint16)
+    from skimage.morphology import remove_small_objects
+    labels = remove_small_objects(labels, MINAREA)
+    labels = comb - labels 
+    return labels.astype(np.uint16)
 
 def segment_bacteria_no_near(img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
     """ Segment all bacteria in image, don't assign to closest nucleus
@@ -275,8 +275,8 @@ def segment_bacteria_no_near(img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHA
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
     """
-   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
-   return labels.astype(np.uint16)
+    labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+    return labels.astype(np.uint16)
 
 def phage_image_only_under_bac(bac,img):
     """ Modify image so that only regions under bacteria mask have values and rest of pixels are set to 0 
@@ -316,8 +316,8 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
         labels (numpy.ndarray[np.uint16]): bacterial mask labels  
 
     """
-   labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
-   if labels.any():
+    labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+    if labels.any():
         labels, comb, nuc_prop, nuc_loc = label_nearest(img, labels, nuc,dist)
         if not hasattr(holder,'plabel'): #not sure what this is doing
             holder.plabel = labels
@@ -326,7 +326,7 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
             return labels
             #.astype(np.unit16)
         labels = repair_sal(img, holder.pimg,comb, holder.pcomb,labels,nuc_prop,nuc_loc,THRESCHANGE)
-   from skimage.morphology import remove_small_objects
-   labels = remove_small_objects(labels, MINAREA)
-   return labels
-   #labels.astype(np.uint16)
+    from skimage.morphology import remove_small_objects
+    labels = remove_small_objects(labels, MINAREA)
+    return labels
+    #labels.astype(np.uint16)
