@@ -3,13 +3,16 @@ import numpy as np
 
 
 def labels_map(lb0, lb1):
-    """lb0 and lb1 should have objects in the same locations but different labels.
+    """
+    lb0 and lb1 should have objects in the same locations but different labels.
+    Objects in lb0 can be smaller than lb1.
     """
     lbnums = np.unique(lb0).tolist()
     lbnums.remove(0)
     st = []
     for n0 in lbnums:
         n_sets = set(lb1[lb0 == n0])
+        n_sets.discard(0)
         assert not len(n_sets) == 0
         n1 = list(n_sets)[0]
         st.append((n0, n1))
