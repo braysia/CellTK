@@ -95,11 +95,12 @@ def watershed_cut(labels, img, MIN_SIGMA=2, MAX_SIGMA=10, THRES=1000):
     return sitk_watershed_intensity(labels, local_maxima)
 
 
-def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=1):
+def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=1, keep=False):
     """
     Higher lambda2 relative to lambda1 gives more outward propagation.
+    Setting keep=True will try to keep the values in labels but may slow down computation.
     """
-    ms = MultiSnakesCombined(img, labels, smoothing=SMOOTHING, lambda1=lambda1, lambda2=lambda2)
+    ms = MultiSnakesCombined(img, labels, smoothing=SMOOTHING, lambda1=lambda1, lambda2=lambda2, keep=keep)
     labels = ms.multi_step(niter=NITER)
     return labels
 
