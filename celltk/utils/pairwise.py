@@ -31,16 +31,16 @@ def angle_assignment(binary_cost, vectors, thres, mass_cost, weight):
         dau_idx = np.transpose(np.nonzero(binary_cost[x, :]))
         cand = vectors[x, :][bin_row==1]
 
+        binary_cost[x, :] = 0
         if len(cand) > 1:
             dot_prod = pairwise_dotproduct(cand)
             mask = np.where(dot_prod<=thres, dot_prod, 0) 
             dau_pairs = np.transpose(np.nonzero(mask)) #returns coordinates of nonzero entries in mask
 
-            binary_cost[x, :] = 0 #0 all entries, then fill 1 for daughter pairs
-            if len(dau_pairs) == 1: # works
+            if len(dau_pairs) == 1:
                 binary_cost[x, :][dau_idx[dau_pairs[0][0]]] = 1
                 binary_cost[x, :][dau_idx[dau_pairs[0][1]]] = 1
-            elif len(dau_pairs) > 1: # greater than one pair found, fix based on mass
+            elif len(dau_pairs) > 1: # greater than one pair found, fix based on combinde angle/mass
                 costs = []
                 for d in dau_pairs:
                     i1 = dau_idx[d[0]][0]
@@ -52,8 +52,6 @@ def angle_assignment(binary_cost, vectors, thres, mass_cost, weight):
                 min_dp = np.argmin(np.abs(costs))
                 binary_cost[x, :][dau_idx[dau_pairs[min_dp][0]]] = 1
                 binary_cost[x, :][dau_idx[dau_pairs[min_dp][1]]] = 1
-        else:
-            binary_cost[x, :] = 0
 
     return binary_cost
 
@@ -61,11 +59,10 @@ def angle_assignment(binary_cost, vectors, thres, mass_cost, weight):
 def pairwise_dotproduct(vectors):
     vec = np.empty((len(vectors), len(vectors)))
 
-    #slow - does nearly 2x number of calculations needed. dot(c, c2) = dot(c2, c)
-    for i, c in enumerate(vectors):
-        for j, c2 in enumerate(vectors):
-            vec[i, j] = np.dot(c, c2) / (np.linalg.norm(c) * np.linalg.norm(c2))
-    return np.triu(vec) #zeros lower triangle. Would be unnecessary if this was faster.
+    for i in xrange(0, len(vectors)):
+        for j in xrange(i, len(vectors)):
+            vec[i, j] = np.dot(vectors[i], vectors[j]) / (np.linalg.norm(vectors[i]) * np.linalg.norm(vectors[j]))
+    return vec 
 
 def find_one_to_one_assign(binary_cost):
     cost = binary_cost.copy()
