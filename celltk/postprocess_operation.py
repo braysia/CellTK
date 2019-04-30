@@ -84,20 +84,20 @@ def cut_short_traces(cells, minframe=4):
     return convert_traces_to_storage(store)
 
 
-def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15, COS_THRES=-0.7, ANG_WEIGHT = 0.5):
+def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15, DOT_THRES=-0.7, ANG_WEIGHT = 0.5):
     '''
     
     Params:
         METHOD: 'mass' or 'angle'
             mass matches daughter cells based on total mass of daughter cells closest to parent cell total mass
-            angle matches daughter cells based on the angle between their vectors and the parent cell. COS_THRES is used to determine cutoff
+            angle matches daughter cells based on the angle between their vectors and the parent cell. DOT_THRES is used to determine cutoff
             in angle method, with multiple candidate pairs, mass is used to determine correct pair, based on ANG_WEIGHT
             Note: angle method will fail to capture dividing cells that are also moving significantly during division
         DISPLACEMENT: Max distance from parent to potential daughter cells
         maxgap: Max amount of frames from division event to matched daughter cell
         DIVISIONMASSERR: Threshold error for difference in total mass between parents and daughters
-        COS_THRES: Threshold of the cosine of the angle between the vectors of the daughter cells to the parent
-        ANG_WEIGHT: Balance between angle cost and mass cost when resolving multiple possible daughter pairs
+        DOT_THRES: Threshold of the cosine of the angle between the vectors of the daughter cells to the parent
+        ANG_WEIGHT: Range from 0-1. 0=all mass, 1=all angle. Balance between angle cost and mass cost when resolving multiple possible daughter pairs. 
     '''
     traces = construct_traces_based_on_next(cells)
     trhandler = TracesController(traces)
@@ -125,9 +125,12 @@ def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMAS
         par_dau[par_dau.sum(axis=1) == 1] = False
     elif METHOD=='angle':
         vec = trhandler.pairwise_vec()
-        par_dau = angle_assignment(withinarea_inframe_halfmass, vec, thres=COS_THRES, mass_cost=half_massdiff, weight=ANG_WEIGHT)
-        # I don't think filtering should be necessary with the way angle_assignment works
-        #par_dau[par_dau.sum(axis=1) == 1] = False 
+        par_dau = angle_assignment(withinarea_inframe_halfmass, vec, thres=DOT_THRES, mass_cost=half_massdiff, weight=ANG_WEIGHT)
+        
+        #remove double assigned daughters
+        #could be optional in the future
+        par_dau[:, par_dau.sum(axis=0) > 1] = False
+        par_dau[par_dau.sum(axis=1) == 1] = False
 
     dis_cells = trhandler.disappeared()
     app_cells = trhandler.appeared()
