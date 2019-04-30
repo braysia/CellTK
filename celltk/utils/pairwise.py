@@ -26,21 +26,33 @@ def angle_assignment(binary_cost, vectors, thres, mass_cost, weight):
     Eliminates ones that are above the thres
     Assigns daughter pairs to parents based on the remaining 
     '''
+
+    #iterate over each parent
     for x in xrange(0, binary_cost.shape[0]):
+        #select the possible candidate daughters from the binary matrix
         bin_row = binary_cost[x, :]
         dau_idx = np.transpose(np.nonzero(binary_cost[x, :]))
         cand = vectors[x, :][bin_row==1]
 
-        binary_cost[x, :] = 0
+        #zero matrix to be filled in later by selected daughter pairs
+        binary_cost[x, :] = False
+
+        #if greater than one daughter is matched to each parent
         if len(cand) > 1:
+
+            #calculate all dot products and mask ones that don't meet the threshold
             dot_prod = pairwise_dotproduct(cand)
             mask = np.where(dot_prod<=thres, dot_prod, 0) 
             dau_pairs = np.transpose(np.nonzero(mask)) #returns coordinates of nonzero entries in mask
 
+            #if only one possible daughter pair is found, fill in the values immediately
+            #if greater than one pair is found, assign it based on a combined mass/angle cost
             if len(dau_pairs) == 1:
-                binary_cost[x, :][dau_idx[dau_pairs[0][0]]] = 1
-                binary_cost[x, :][dau_idx[dau_pairs[0][1]]] = 1
-            elif len(dau_pairs) > 1: # greater than one pair found, fix based on combinde angle/mass
+                binary_cost[x, :][dau_idx[dau_pairs[0][0]]] = True
+                binary_cost[x, :][dau_idx[dau_pairs[0][1]]] = True
+            elif len(dau_pairs) > 1:
+
+                #calculate the cost for each daughter pair based on available information
                 costs = []
                 for d in dau_pairs:
                     i1 = dau_idx[d[0]][0]
@@ -49,9 +61,10 @@ def angle_assignment(binary_cost, vectors, thres, mass_cost, weight):
                     angle_error = weight * (1 - np.abs(dot_prod[d[0], d[1]]))
                     costs.append(mass_error + angle_error)
 
+                #assign the lowest cost daughter
                 min_dp = np.argmin(np.abs(costs))
-                binary_cost[x, :][dau_idx[dau_pairs[min_dp][0]]] = 1
-                binary_cost[x, :][dau_idx[dau_pairs[min_dp][1]]] = 1
+                binary_cost[x, :][dau_idx[dau_pairs[min_dp][0]]] = True
+                binary_cost[x, :][dau_idx[dau_pairs[min_dp][1]]] = True
 
     return binary_cost
 
