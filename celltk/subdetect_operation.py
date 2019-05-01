@@ -219,6 +219,18 @@ def segment_bacteria(nuc, img, slen=3, SIGMA=0.5, THRES=20, CLOSE=20, MINAREA=5,
     labels = remove_small_objects(labels, MINAREA)
     return labels.astype(np.uint16)
 
+def keep_certain_labels(nuc,img):
+    """ Modify labels so that labels with a certain property (i.e. without bacteria) are removed.
+        This function will remove nuclear labels that do not have an associated mask label 
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): mask labels for another object 
+    """
+    labels_keep = np.unique(nuc)
+    labels_keep = np.array(np.delete(labels_keep,0))
+    ix = np.in1d(img.ravel(), labels_keep).reshape(img.shape)
+    indices_remove = np.invert(ix)
+    img[indices_remove] = 0 
+    return img
 
 def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
     """ Segment bacteria and assign to closest nucleus and return the mask back without regions containing bacteria
@@ -291,3 +303,23 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
     labels = remove_small_objects(labels, MINAREA)
     return labels
     #labels.astype(np.uint16)
+
+def keep_best_prediction(cyto,img):
+    print cyto.shape
+    print img.shape
+    if img.shape == cyto.shape:
+        new_img = np.zeros((img.shape[0],img.shape[1]))
+        x = img.shape[0]
+        y = img.shape[1]
+        for i in range(0,x):
+            for j in range(0,y):
+                print i
+                img_val = img[i,j]
+                label_val = cyto[i,j]
+                if not img_val == label_val:
+                    new_img[i,j] = img_val + label_val
+                else:
+                    new_img[i,j] = img_val 
+        return new_img
+    else:
+        return
