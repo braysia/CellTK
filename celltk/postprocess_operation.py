@@ -84,9 +84,8 @@ def cut_short_traces(cells, minframe=4):
     return convert_traces_to_storage(store)
 
 
-def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15, DOT_THRES=-0.7, ANG_WEIGHT = 0.5):
+def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMASSERR=0.15, DOT_THRES=-0.7, DIST_THRES=0.35, ANG_WEIGHT = 0.5):
     '''
-    
     Params:
         METHOD: 'mass' or 'angle'
             mass matches daughter cells based on total mass of daughter cells closest to parent cell total mass
@@ -96,8 +95,9 @@ def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMAS
         DISPLACEMENT: Max distance from parent to potential daughter cells
         maxgap: Max amount of frames from division event to matched daughter cell
         DIVISIONMASSERR: Threshold error for difference in total mass between parents and daughters
-        DOT_THRES: Threshold of the cosine of the angle between the vectors of the daughter cells to the parent
-        ANG_WEIGHT: Range from 0-1. 0=all mass, 1=all angle. Balance between angle cost and mass cost when resolving multiple possible daughter pairs. 
+        DOT_THRES: Range -1 to 1.Threshold of the cosine of the angle between the vectors of the daughter cells to the parent
+        DIST_THRES: Range 0 to 1. Threshold is measured in fraction from center point of two daughters. 0 is parent exactly in middle. 1 is parent at edge
+        ANG_WEIGHT: Range 0 to 1. 0=all mass, 1=all angle. Balance between angle cost and mass cost when resolving multiple possible daughter pairs. 
     '''
     traces = construct_traces_based_on_next(cells)
     trhandler = TracesController(traces)
@@ -118,22 +118,22 @@ def detect_division(cells, METHOD='mass', DISPLACEMENT=50, maxgap=4, DIVISIONMAS
 
     withinarea_inframe_halfmass = withinarea * inframe * halfmass
 
+    dis_cells = trhandler.disappeared()
+    app_cells = trhandler.appeared()
+
     if METHOD=='mass':
         # CHECK: now based on distance.
         par_dau = one_to_two_assignment(withinarea_inframe_halfmass, half_massdiff)
         # CHECK: If only one daughter is found ignore it.
         par_dau[par_dau.sum(axis=1) == 1] = False
     elif METHOD=='angle':
-        vec = trhandler.pairwise_vec()
-        par_dau = angle_assignment(withinarea_inframe_halfmass, vec, thres=DOT_THRES, mass_cost=half_massdiff, weight=ANG_WEIGHT)
+        par_xy, dau_xy = trhandler.pairwise_xy()
+        par_dau = angle_assignment(withinarea_inframe_halfmass, dau_xy, par_xy, dot_thres=DOT_THRES, dist_thres=DIST_THRES, mass_cost=half_massdiff, weight=ANG_WEIGHT)
         
         #remove double assigned daughters
         #could be optional in the future
         par_dau[:, par_dau.sum(axis=0) > 1] = False
         par_dau[par_dau.sum(axis=1) == 1] = False
-
-    dis_cells = trhandler.disappeared()
-    app_cells = trhandler.appeared()
 
     if par_dau.any():
         disapp_idx, app_idx = np.where(par_dau)

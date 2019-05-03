@@ -31,19 +31,14 @@ class TracesController(object):
         else:
             return np.array([])
 
-    def pairwise_vec(self):
+    def pairwise_xy(self):
         if self.disappeared() and self.appeared():
-            par = [(i.y, i.x) for i in self.disappeared()]
-            dau = [(i.y, i.x) for i in self.appeared()]
-            vec = np.empty((len(par), len(dau)), dtype = object)
+            par_xy = [(i.y, i.x) for i in self.disappeared()]
+            dau_xy = [(i.y, i.x) for i in self.appeared()]
 
-            for i, p in enumerate(par):
-                for j, d in enumerate(dau):
-                    #fill in each with (y_p - y_d, x_p - x_d)
-                    vec[i, j] = np.array([p[0]-d[0], p[1]-d[1]])
-            return vec
+            return par_xy, dau_xy
         else:
-            return np.array([])
+            return np.array([])      
 
     def pairwise_frame(self):
         '''disappeared in row, appeared in col'''
