@@ -21,3 +21,5 @@ RADIUS, OPEN = [3, 100], 3
 # The number of cells in a track should not exceed this value.
 MAX_NUMCELL = 100000
 
+# File name for saving used during apply.py
+FILE_NAME = 'df'
