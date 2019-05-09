@@ -25,6 +25,10 @@ def caller(inputs, output, functions, params):
 
     for holder.frame, holder.path in enumerate(inputs):
         img = imread(holder.path)
+        ## KB 5/3/19 
+        #time_pt = int(holder.path[0][-12:-9])
+        #if time_pt%6 == 0:
+            ## KB 5/3/19 
         for function, param in zip(functions, params):
             func = getattr(preprocess_operation, function)
             img = func(img, **param)
