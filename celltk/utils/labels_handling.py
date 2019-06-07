@@ -36,3 +36,28 @@ def convert_labels(lb_ref_to, lb_ref_from, lb_convert):
     for n0, n1 in zip(lbmap_to, lbmap_from):
         arr[lb == n0] = n1
     return arr
+
+
+def seeding_separate(c, p):
+    """
+    Keep the markers separated if there are two previous markers on one current marker.
+    Assuming foreground in c is always including foreground in p. 
+    """
+    dou_c = []
+    dou_p = []
+    both = [i for i in list(set(p[c > 0])) if not i == 0]  # exists in previous and current. 
+    for b in both:
+        sp = [i for i in set(p[c==b]) if not i == 0]
+        if len(sp) > 1:
+            dou_p.append(sp)
+            dou_c.append(b)
+
+    for dc in dou_c:
+        c[c==dc] = 0
+    c += 10000  # dirty implementation
+    c[c==10000] = 0
+    dou_p = [i for j in dou_p for i in j]
+    for dp in dou_p:
+        c[p == dp] = dp
+    return c
+
