@@ -87,21 +87,19 @@ def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, 
     return label(binary_dilation(bw, np.ones((3, 3))))
 
 
-def agglomeration(img, MINSIZE=50, SN=3, INC=2.5):
+def agglomeration(img, MINSIZE=50, BG=50, INC=2.5):
     """
     INC: smaller it is, more resolution and computation
-    SN: signal to noise ratio. Background is estimated as 3-percentile.
+    BG: Threshold for background
     """
-    BG_PERC = 3
     li = []
     img = img.astype(np.float32)
 
     rs = np.arange(100, 0, -INC)
     perclist = []
-    bottom = np.percentile(img, BG_PERC) * SN
     for r in rs:
         sc = np.percentile(img, r)
-        if sc > bottom:
+        if sc > BG:
             perclist.append(sc)
         else:
             break

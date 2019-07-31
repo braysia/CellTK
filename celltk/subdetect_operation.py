@@ -337,24 +337,22 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
 
 
 
-def agglomeration_seed(labels, img, MINSIZE=50, SN=3, INC=2.5):
+def agglomeration_seed(labels, img, MINSIZE=50, BG=50, INC=2.5, MININT=None):
     """
     labels: This labels will be used as a seed marker. 
     MINSIZE: minimum size of an object
-    SN: signal to noise ratio. Background is estimated as 3-percentile.
+    BG: Threshold for background
     INC: smaller it is, more resolution and computation
     """
     seed = binary_erosion(labels, np.ones((3, 3)))
-    BG_PERC = 3
     li = []
     img = img.astype(np.float32)
 
     rs = np.arange(100, 0, -INC)
     perclist = []
-    bottom = np.percentile(img, BG_PERC) * SN
     for r in rs:
         sc = np.percentile(img, r)
-        if sc > bottom:
+        if sc > BG:
             perclist.append(sc)
         else:
             break
