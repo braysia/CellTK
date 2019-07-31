@@ -26,12 +26,6 @@ warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 from _setting import PROP_SAVE, MAX_NUMCELL
 
-# We should be able to provide this as configuration when booting CellTK 
-#PROP_SAVE = ['area', 'cell_id','max_intensity','mean_intensity', 'median_intensity','total_intensity', 'x', 'y'] #'convex_area', 'cv_intensity',
-#             #'eccentricity', 'major_axis_length', 'minor_axis_length', ,
-#             #, 'min_intensity', 'orientation',
-#            # 'perimeter', 'solidity', 'std_intensity', 'total_intensity', 'x', 'y', #'parent', #'num_seg']
-
 logger = logging.getLogger(__name__)
 
 
