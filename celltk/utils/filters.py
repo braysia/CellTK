@@ -15,7 +15,7 @@ from morphsnakes import MorphACWE, curvop
 from mahotas.segmentation import gvoronoi
 from skimage.morphology import thin
 import pandas as pd
-
+from scipy.ndimage import binary_dilation
 
 def label_watershed(labels, regmax):
     # Since there are non-unique values for dist, add very small numbers. This will separate each marker by regmax at least.
@@ -86,17 +86,22 @@ def calc_lapgauss(img, SIGMA=2.5):
 
 
 def gray_fill_holes(labels):
-    '''This will fill holes of gray int images'''
-    # labels = np.int32(labels)
-    # labels = np.pad(labels, pad_width=1, mode='constant', constant_values=-100000)
-    # blabel = labels.copy()
-    # blabel[1:-1, 1:-1] = 100000
-    # fim = reconstruction(neg(blabel), neg(labels))
-    # fim = neg(np.int32(fim))
-    # fim = fim[1:-1, 1:-1]
-    # return fim
+    """
+    This will fill holes of gray int images.
+    It does not fill a hole that is surrounded by multiple values.
+    """
     fil = sitk.GrayscaleFillholeImageFilter()
-    return sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(labels)))
+    filled = sitk.GetArrayFromImage(fil.Execute(sitk.GetImageFromArray(labels)))
+    holes = label(filled != labels)
+    for idx in np.unique(holes):
+        if idx == 0:
+            continue
+        hole = holes == idx
+        surrounding_values = labels[binary_dilation(hole) & ~hole]
+        uniq = np.unique(surrounding_values)
+        if len(uniq) == 1:
+            labels[hole > 0] = uniq[0]
+    return labels
 
 
 def sitk_watershed_intensity(img, local_maxima):
