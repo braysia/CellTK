@@ -130,12 +130,14 @@ def crop_60(img, CROP=0.77):
         return img[x_start:x_end, y_start:y_end, :]
 
 
-def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp_corr=False):
+def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp_corr=False, per_frame=False):
     """
     Use empty images for background subtraction and illumination bias correction.
     Given multiple reference images, it will calculate median profile and use it for subtraction.
     If flatfield image has the same illumination pattern but different exposure to the img,
     turning on bg_align would calculate correction factor.
+
+    if per_frame is True, each frame will be corrected by the reference from that frame. False = all frames used.
 
     ff_paths (str or List(str)): image path for flat fielding references.
                                  It can be single, multiple or path with wildcards.
@@ -143,16 +145,28 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp
                 ff_paths = ["FF/img_01.tif", "FF/img_02.tif"]
 
     """
-    store = []
-    if isinstance(ff_paths, str):
-        ff_paths = [ff_paths, ]
-    for i in ff_paths:
-        for ii in glob(i):
-            store.append(ii)
-    ff_store = []
-    for path in store:
-        ff_store.append(imread(path))
-    ff = np.median(np.dstack(ff_store), axis=2)
+    if not hasattr(holder, 'ff_store'):
+        if isinstance(ff_paths, str):
+            ff_paths = [ff_paths, ]
+
+        ff_store = []   
+        for i in ff_paths:
+            temp_ff = []
+            for ii in glob(i):
+                temp_ff.append(imread(ii))
+            ff_store.append(temp_ff)
+        holder.ff_store = ff_store
+
+        if per_frame:
+            for sl in holder.ff_store:
+                assert len(sl) == len(holder.inputs), 'Different number of reference frames than experimental frames'
+    
+    if per_frame:
+        flattened = [sl[holder.frame] for sl in holder.ff_store]
+    else:
+        flattened = [l for sl in holder.ff_store for l in sl]
+    
+    ff = np.median(np.dstack(flattened), axis=2)
 
     if exp_corr:
         """If a reference is taken at different exposure, or exposure is not stable over time,
@@ -175,6 +189,11 @@ def flatfield_references(img, ff_paths=['Pos0/img00.tif', 'Pos1/img01.tif'], exp
     img = img - ff
     img[img < 0] = np.nan
     img = interpolate_nan(img)
+
+    #clear holder.ff_store if last frame
+    if holder.path == holder.inputs[-1]:
+        del holder.ff_store
+
     return img
 
 

@@ -131,9 +131,11 @@ def lap_local_max(img, sigma_list, THRES):
 
 
 class MultiSnakes(MorphACWE):
-    def __init__(self, img, labels, smoothing=1, lambda1=1, lambda2=1):
+    def __init__(self, img, labels, smoothing=1, lambda1=1, lambda2=1, keep=False):
         super(MultiSnakes, self).__init__(img, smoothing, lambda1, lambda2)
         self.levelset = labels
+        self._keep = keep
+        self._prev = labels.copy()
 
     def multi_step(self, niter=1):
         for i in range(niter):
@@ -173,7 +175,13 @@ class MultiSnakes(MorphACWE):
         self._u = res
 
     def return_labels(self):
-        return label(self.levelset, connectivity=1)
+        from labels_handling import convert_labels_lap
+        if self._keep:
+            lb = convert_labels_lap(self._prev, label(self.levelset, connectivity=1))
+            self._prev = lb.copy()
+            return lb
+        else:
+            return label(self.levelset, connectivity=1)
 
 
 class MultiSnakesCombined(MultiSnakes):

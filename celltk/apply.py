@@ -24,7 +24,7 @@ from scipy.ndimage.morphology import binary_dilation
 import warnings
 warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
-from _setting import PROP_SAVE, MAX_NUMCELL
+from _setting import PROP_SAVE, MAX_NUMCELL, FILE_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -133,15 +133,15 @@ def caller(inputs_list, inputs_labels_list, output, primary, secondary):
             index = pd.MultiIndex.from_product([obj, ch, PROP_SAVE, range(arr.shape[-1])], names=['object', 'ch', 'prop', 'frame'])
             df = pd.DataFrame(narr, index=index, columns=cellids)
 
-            if exists(join(output, 'df.csv')):
-                ex_df = pd.read_csv(join(output, 'df.csv'), index_col=['object', 'ch', 'prop', 'frame'])
+            if exists(join(output, FILE_NAME+'.csv')):
+                ex_df = pd.read_csv(join(output, FILE_NAME+'.csv'), index_col=['object', 'ch', 'prop', 'frame'])
                 ex_df.columns = pd.to_numeric(ex_df.columns)
                 ex_df = ex_df.astype(np.float32)
                 df = pd.concat([df, ex_df])
-            df.to_csv(join(output, 'df.csv'))
+            df.to_csv(join(output, FILE_NAME+'.csv'))
     larr = df2larr(df)
-    larr.save(join(output, 'df.npz'))
-    logger.info("\tdf.npz saved.")
+    larr.save(join(output, FILE_NAME+'.npz'))
+    logger.info("\t" + FILE_NAME + ".npz saved.")
 
 
 def main():

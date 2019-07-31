@@ -31,6 +31,15 @@ class TracesController(object):
         else:
             return np.array([])
 
+    def pairwise_xy(self):
+        if self.disappeared() and self.appeared():
+            par_xy = [(i.y, i.x) for i in self.disappeared()]
+            dau_xy = [(i.y, i.x) for i in self.appeared()]
+
+            return par_xy, dau_xy
+        else:
+            return np.array([])      
+
     def pairwise_frame(self):
         '''disappeared in row, appeared in col'''
         return calc_diff([i.frame for i in self.disappeared()], [i.frame for i in self.appeared()])
