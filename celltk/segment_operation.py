@@ -6,6 +6,10 @@ from utils.filters import label_watershed
 from utils.binary_ops import grey_dilation
 import numpy as np
 from scipy.ndimage import gaussian_laplace, binary_dilation, binary_opening, binary_closing
+from skimage.morphology import remove_small_objects
+from utils.labels_handling import seeding_separate
+from skimage.morphology import watershed
+
 np.random.seed(0)
 
 
@@ -83,3 +87,30 @@ def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, 
     return label(binary_dilation(bw, np.ones((3, 3))))
 
 
+def agglomeration(img, MINSIZE=50, BG=50, INC=2.5):
+    """
+    INC: smaller it is, more resolution and computation
+    BG: Threshold for background
+    """
+    li = []
+    img = img.astype(np.float32)
+
+    rs = np.arange(100, 0, -INC)
+    perclist = []
+    for r in rs:
+        sc = np.percentile(img, r)
+        if sc > BG:
+            perclist.append(sc)
+        else:
+            break
+    
+    for _r in perclist:
+        thresed = remove_small_objects(img > _r, MINSIZE, connectivity=2) > 0
+        li.append(thresed.astype(np.uint16))
+    q = np.sum(np.dstack(li), axis=2)
+    p = label(q)
+    for n, ind in enumerate(range(int(np.max(q)-1), 0, -1)):
+        c = seeding_separate(label(q >= ind), p)
+        w = watershed(q >= ind, markers=c, mask=(q>=ind), watershed_line=True)
+        p = label(w, connectivity=2)
+    return p

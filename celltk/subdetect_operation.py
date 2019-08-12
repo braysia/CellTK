@@ -12,6 +12,10 @@ from utils.labels_handling import convert_labels
 from utils.subdetect_utils import label_high_pass, label_nearest, repair_sal 
 from utils.global_holder import holder
 from segment_operation import constant_thres
+from scipy.ndimage.morphology import binary_erosion
+from utils.labels_handling import seeding_separate
+from skimage.morphology import watershed
+
 np.random.seed(0)
 
 
@@ -291,3 +295,40 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
     labels = remove_small_objects(labels, MINAREA)
     return labels
     #labels.astype(np.uint16)
+
+
+
+def agglomeration_seed(labels, img, MINSIZE=50, BG=50, INC=2.5, MININT=None):
+    """
+    labels: This labels will be used as a seed marker. 
+    MINSIZE: minimum size of an object
+    BG: Threshold for background
+    INC: smaller it is, more resolution and computation
+    """
+    seed = binary_erosion(labels, np.ones((3, 3)))
+    li = []
+    img = img.astype(np.float32)
+
+    rs = np.arange(100, 0, -INC)
+    perclist = []
+    for r in rs:
+        sc = np.percentile(img, r)
+        if sc > BG:
+            perclist.append(sc)
+        else:
+            break
+    
+    for _r in perclist:
+        thresed = remove_small_objects(img > _r, MINSIZE, connectivity=2) > 0
+        li.append(thresed.astype(np.uint16))
+        if seed is not None:
+            li.append((seed > 0).astype(np.uint16))
+            for l in li:
+                l[seed > 0] = 1
+    q = np.sum(np.dstack(li), axis=2)
+    p = label(q)
+    for n, ind in enumerate(range(int(np.max(q)-1), 0, -1)):
+        c = seeding_separate(label(q >= ind), p)
+        w = watershed(q >= ind, markers=c, mask=(q>=ind), watershed_line=True)
+        p = label(w, connectivity=2)
+    return p
