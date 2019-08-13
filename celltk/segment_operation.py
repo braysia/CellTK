@@ -87,7 +87,7 @@ def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, 
     return label(binary_dilation(bw, np.ones((3, 3))))
 
 
-def agglomeration(img, MINSIZE=50,  STEPS=20, FILSIZE=5, RATIO=0):
+def agglomeration(img, MINSIZE=50,  STEPS=100, FILSIZE=5, RATIO=0):
     """
     MINSIZE: minimum area for a seed object. It can be smaller than actual objects.
     STEPS: Larger it is, more resolution and computation

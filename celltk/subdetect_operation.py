@@ -298,7 +298,7 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
 
 
 
-def agglomeration_seed(labels, img, MINSIZE=50,  STEPS=20, FILSIZE=5, RATIO=0):
+def agglomeration_seed(labels, img, MINSIZE=50,  STEPS=100, FILSIZE=5, RATIO=0):
     """
     MINSIZE: minimum area for a seed object. It can be smaller than actual objects.
     STEPS: Larger it is, more resolution and computation
