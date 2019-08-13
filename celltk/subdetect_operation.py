@@ -6,7 +6,7 @@ from utils.concave_seg import levelset_lap
 from utils.filters import label, adaptive_thresh
 from scipy.ndimage.filters import minimum_filter
 import numpy as np
-from scipy.ndimage import morphology
+from scipy.ndimage import morphology, binary_opening
 from skimage.morphology import remove_small_objects
 from utils.labels_handling import convert_labels
 from utils.subdetect_utils import label_high_pass, label_nearest, repair_sal 
@@ -298,26 +298,24 @@ def segment_bacteria_repair(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRE
 
 
 
-def agglomeration_seed(labels, img, MINSIZE=50, BG=50, INC=2.5, MININT=None):
+def agglomeration_seed(labels, img, MINSIZE=50,  STEPS=20, FILSIZE=5, RATIO=0):
     """
-    labels: This labels will be used as a seed marker. 
-    MINSIZE: minimum size of an object
-    BG: Threshold for background
-    INC: smaller it is, more resolution and computation
+    MINSIZE: minimum area for a seed object. It can be smaller than actual objects.
+    STEPS: Larger it is, more resolution and computation
+    FILSIZE: argument for adaptive thresholding. Larger if capturing too much backrgound.
+    RATIO: argument for adaptive thresholding. Larger if capturing too much backrgound.
     """
     seed = binary_erosion(labels, np.ones((3, 3)))
     li = []
     img = img.astype(np.float32)
 
-    rs = np.arange(100, 0, -INC)
-    perclist = []
-    for r in rs:
-        sc = np.percentile(img, r)
-        if sc > BG:
-            perclist.append(sc)
-        else:
-            break
-    
+    mask = adaptive_thresh(img, RATIO, FILSIZE)
+    mask = binary_opening(mask, np.ones((3, 3)))
+    mask = remove_small_objects(mask, MINSIZE)
+
+    foreground = img[mask]
+    perclist = [np.percentile(foreground, r) for r in np.linspace(0, 100, STEPS)]
+
     for _r in perclist:
         thresed = remove_small_objects(img > _r, MINSIZE, connectivity=2) > 0
         li.append(thresed.astype(np.uint16))
@@ -327,8 +325,11 @@ def agglomeration_seed(labels, img, MINSIZE=50, BG=50, INC=2.5, MININT=None):
                 l[seed > 0] = 1
     q = np.sum(np.dstack(li), axis=2)
     p = label(q)
-    for n, ind in enumerate(range(int(np.max(q)-1), 0, -1)):
+
+    for ind in reversed(np.unique(q).tolist()):
         c = seeding_separate(label(q >= ind), p)
         w = watershed(q >= ind, markers=c, mask=(q>=ind), watershed_line=True)
+        w[mask == 0] = 0
+        w = remove_small_objects(w, MINSIZE)
         p = label(w, connectivity=2)
     return p

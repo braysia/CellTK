@@ -87,30 +87,33 @@ def lap_peak_local(img, separation=10, percentile=64, min_sigma=2, max_sigma=5, 
     return label(binary_dilation(bw, np.ones((3, 3))))
 
 
-def agglomeration(img, MINSIZE=50, BG=50, INC=2.5):
+def agglomeration(img, MINSIZE=50,  STEPS=20, FILSIZE=5, RATIO=0):
     """
-    INC: smaller it is, more resolution and computation
-    BG: Threshold for background
+    MINSIZE: minimum area for a seed object. It can be smaller than actual objects.
+    STEPS: Larger it is, more resolution and computation
+    FILSIZE: argument for adaptive thresholding. Larger if capturing too much backrgound.
+    RATIO: argument for adaptive thresholding. Larger if capturing too much backrgound.
     """
     li = []
     img = img.astype(np.float32)
 
-    rs = np.arange(100, 0, -INC)
-    perclist = []
-    for r in rs:
-        sc = np.percentile(img, r)
-        if sc > BG:
-            perclist.append(sc)
-        else:
-            break
-    
+    mask = adaptive_thres(img, FILSIZE, RATIO)
+    mask = binary_opening(mask, np.ones((3, 3)))
+    mask = remove_small_objects(mask, MINSIZE)
+
+    foreground = img[mask]
+    perclist = [np.percentile(foreground, r) for r in np.linspace(0, 100, STEPS)]
+
     for _r in perclist:
         thresed = remove_small_objects(img > _r, MINSIZE, connectivity=2) > 0
         li.append(thresed.astype(np.uint16))
     q = np.sum(np.dstack(li), axis=2)
     p = label(q)
-    for n, ind in enumerate(range(int(np.max(q)-1), 0, -1)):
+
+    for ind in reversed(np.unique(q).tolist()):
         c = seeding_separate(label(q >= ind), p)
         w = watershed(q >= ind, markers=c, mask=(q>=ind), watershed_line=True)
+        w[mask == 0] = 0
+        w = remove_small_objects(w, MINSIZE)
         p = label(w, connectivity=2)
     return p
