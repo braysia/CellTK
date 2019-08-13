@@ -77,6 +77,7 @@ def convert_labels_lap(lb0, lb1, THRES=10):
         arr[lb1 == cf] = ct
     return arr
 
+
 def seeding_separate(c, p):
     """
     Keep the markers separated if there are two previous markers on one current marker.
@@ -94,7 +95,7 @@ def seeding_separate(c, p):
     for dc in dou_c:
         c[c==dc] = 0
     c += 10000  # dirty implementation
-    c[c==10000] = 0
+    c[c == 10000] = 0
     dou_p = [i for j in dou_p for i in j]
     for dp in dou_p:
         c[p == dp] = dp
