@@ -185,7 +185,21 @@ class CoordsConcave(object):
 
     def calc_neck_score_thres(self):
         score, s_coords = self.calc_neck_score()
-        return score[score > self.thres], s_coords[score > self.thres]
+        score, coords = score[score > self.thres], s_coords[score > self.thres]
+        score, coords = self.remove_nearby(score, coords)
+        return score, coords
+
+    def remove_nearby(self, score, coords):
+        # if adjuscent pixel, choose the higher score.
+        dist = np.triu(cdist(coords, coords))
+        dist[dist == 0] = np.Inf
+        vec = np.zeros(score.shape, np.bool)
+        for n, d in enumerate(dist):
+            vec[n:] = (vec[n:]) | (d[n:] < 1.42)
+        return score[~vec], coords[~vec]
+        
+
+
 
 
 class CoordsConcaveWs(CoordsConcave):
@@ -222,7 +236,7 @@ class CellCutter(object):
         """
         Use lower values for CANDS_LIMIT to speed up
         """
-        large_rad = 0  # fix it later.
+        # large_rad = 0  # fix it later.
 
         self.bw = bw
         self.img = img
@@ -231,7 +245,7 @@ class CellCutter(object):
         self.THRES = THRES
         self.filfunc = partial(cellfilter, small_area=np.pi*small_rad**2, large_area=np.pi*large_rad**2, major_minor=2.0)
         self.goodcells = []
-        # self.large_rad = large_rad
+        self.large_rad = large_rad
         self.small_rad = small_rad
         self.STEPLIM = self.small_rad * np.pi/2
         self.coords_set = []
@@ -410,19 +424,19 @@ def levelset_geo_separete(img, labels, niter=10, prop=-1, advec=-0.5, curve=-0.5
 
 def get_cut_coords(img, labels, small_rad, large_rad, EDGELEN=6, THRES=180):
     largela = extract_large(labels, AREA=np.pi * large_rad**2)
-    wlines = wshed_raw(labels > 0, img)
+    # wlines = wshed_raw(labels > 0, img)
+    wlines = np.ones(labels.shape)  # no watershed based selection
     store = []
     for i in np.unique(largela):
         if i == 0:
             continue
-        cc = CellCutter(labels==i, img, wlines, small_rad=small_rad, large_rad=large_rad, EDGELEN=EDGELEN, THRES=THRES)
+        cc = CellCutter(labels == i, img, wlines, small_rad=small_rad, large_rad=large_rad, EDGELEN=EDGELEN, THRES=THRES)
         cc.run()
         store.append(cc.cut_coords)
     return store
 
 
 def run_concave_cut(img, labels, small_rad, large_rad, EDGELEN=6, THRES=180):
-
     store = get_cut_coords(img, labels, small_rad, large_rad, EDGELEN=EDGELEN, THRES=THRES)
     labels = label(cut_labels(labels, [i for j in store for i in j]), connectivity=1)
     return labels
