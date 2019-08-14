@@ -121,7 +121,7 @@ def run_lap(img0, img1, labels0, labels1, DISPLACEMENT=30, MASSTHRES=0.2):
 
 
 def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
-                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False, SMALL_RAD=None, CANDS_LIMIT=300):
+                   EDGELEN=5, THRES_ANGLE=180, WSLIMIT=False, SMALL_RAD=None, CANDS_LIMIT=500):
     """
     Adaptive segmentation by using tracking informaiton.
     Separate two objects by making a cut at the deflection. For each points on the outline,
@@ -136,7 +136,6 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
 
     SMALL_RAD (int or None): The smallest radius of candidate objects. If you have many cells, set it to None will infer the radius from previous frame.
     CANDS_LIMIT(int): use lower if slow. limit a number of searches.
-
     """
     labels0, labels = nn_closer(img0, img1, labels0, labels1, DISPLACEMENT, MASSTHRES)
     labels1 = -labels.copy()
@@ -148,7 +147,6 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
         holder.SMALL_RAD = SMALL_RAD
     SMALL_RAD = holder.SMALL_RAD
 
-    rps0 = regionprops(labels0, img0)
     unique_labels = np.unique(labels1)
     unique_labels = unique_labels[unique_labels > 0]
 
@@ -157,46 +155,42 @@ def track_neck_cut(img0, img1, labels0, labels1, DISPLACEMENT=10, MASSTHRES=0.2,
     else:
         wlines = np.ones(labels1.shape, np.bool)
 
-    store = []
+    good_cells = [True, ]
+    flag = 0
     coords_store = []
-    for label_id in unique_labels:
-        if label_id == 0:
-            continue
-        cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD,
-                        EDGELEN=EDGELEN, THRES=THRES_ANGLE, CANDS_LIMIT=CANDS_LIMIT)
-        cc.prepare_coords_set()
-        candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set[:CANDS_LIMIT])
-        for c in candidates:
-            c.raw_label = label_id
-        store.append(candidates)
-        coords_store.append(cc.coords_set)
-
-    coords_store = [i for i in coords_store if i]
-    # Attempt a first cut.
-    good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
-    labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
-    labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)
-
     while good_cells:
         rps0 = regionprops(labels0, img0)
         labels1 = -labels.copy()
-        rps0 = regionprops(labels0, img0)
         unique_labels = np.unique(labels1)
-
         store = []
-        for label_id in unique_labels:
-            if label_id == 0:
-                continue
-            bw = labels1 == label_id
-            coords_set = [i for i in coords_store if bw[i[0][0][0], i[0][0][1]]]
-            if not coords_set:
-                continue
-            coords_set = coords_set[0]
-            candidates = cc.search_cut_candidates(bw, coords_set)
-            for c in candidates:
-                c.raw_label = label_id
-            store.append(candidates)
-            coords_store.append(coords_set)
+
+        if flag == 0:
+            for label_id in unique_labels:
+                if label_id == 0:
+                    continue
+                cc = CellCutter(labels1 == label_id, img1, wlines, small_rad=SMALL_RAD,
+                                EDGELEN=EDGELEN, THRES=THRES_ANGLE, CANDS_LIMIT=CANDS_LIMIT)
+                cc.prepare_coords_set()
+                candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set[:CANDS_LIMIT])
+                for c in candidates:
+                    c.raw_label = label_id
+                store.append(candidates)
+                coords_store.append(cc.coords_set)
+            coords_store = [i for i in coords_store if i]
+            flag = 1
+        else:
+            for label_id in unique_labels:
+                if label_id == 0:
+                    continue
+                cc.bw = labels1 == label_id
+                coords_set = [i for i in coords_store if cc.bw[i[0][0][0], i[0][0][1]]]
+                if not coords_set:
+                    continue
+                cc.coords_set = coords_set[0]
+                candidates = cc.search_cut_candidates(cc.bw.copy(), cc.coords_set)
+                for c in candidates:
+                    c.raw_label = label_id
+                store.append(candidates)
         good_cells = _find_best_neck_cut(rps0, store, DISPLACEMENT, MASSTHRES)
         labels0, labels = _update_labels_neck_cut(labels0, labels1, good_cells)
         labels0, labels = nn_closer(img0, img1, labels0, -labels, DISPLACEMENT, MASSTHRES)

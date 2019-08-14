@@ -232,7 +232,7 @@ def cellfilter(cell, small_area, large_area, major_minor=2.0):
 
 
 class CellCutter(object):
-    def __init__(self, bw, img, wlines, small_rad, large_rad=0, EDGELEN=10, THRES=180, CANDS_LIMIT=300):
+    def __init__(self, bw, img, wlines, small_rad, large_rad=np.Inf, EDGELEN=10, THRES=180, CANDS_LIMIT=300):
         """
         Use lower values for CANDS_LIMIT to speed up
         """
@@ -267,6 +267,7 @@ class CellCutter(object):
         if not self.cell:
             return
         while self.cell.area > self.large_rad ** 2 * np.pi:
+            print 1
             self.remove_coords_set()
             self.collect_goodcells()
             self.make_bw()
