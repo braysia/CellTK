@@ -333,3 +333,16 @@ def agglomeration_seed(labels, img, MINSIZE=50,  STEPS=100, FILSIZE=5, RATIO=0):
         w = remove_small_objects(w, MINSIZE)
         p = label(w, connectivity=2)
     return p
+
+def remove_nuc_from_cyto(labels, img, same_val=True):
+    '''
+    returns cytoplasmic label with nuclei removed:
+
+    labels: cytoplasmic labels 
+    img: nuclear labels
+    same_val: if True, nuclei will only be removed if the cytoplasmic mask has the same label. if False, all nuclei are removed.
+    '''
+    if same_val:
+        return np.where(labels == img, 0, labels)
+    else:
+        return np.where(img > 0, 0, labels)
