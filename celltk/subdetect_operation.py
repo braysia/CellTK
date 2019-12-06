@@ -144,7 +144,7 @@ def watershed_divide(labels, regmax=10, min_size=100):
 
     large_labels = remove_small_objects(labels, min_size, connectivity=4)
     labels[large_labels > 0] = 0
-    ws_large = watershed_labels(large_labels, regmax)
+    ws_large = label(watershed_labels(large_labels, regmax))
     ws_large += labels.max()
     ws_large[ws_large == labels.max()] = 0
     return labels + ws_large
@@ -333,3 +333,14 @@ def agglomeration_seed(labels, img, MINSIZE=50,  STEPS=100, FILSIZE=5, RATIO=0):
         w = remove_small_objects(w, MINSIZE)
         p = label(w, connectivity=2)
     return p
+
+
+def size_filter(labels, MINSIZE=0, MAXSIZE=10000):
+    labels = remove_small_objects(labels, MINSIZE, connectivity=4)
+    antimask = remove_small_objects(labels, MAXSIZE, connectivity=4)
+    labels[antimask > 0] = False
+    return labels
+
+
+
+
