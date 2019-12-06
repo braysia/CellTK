@@ -343,4 +343,23 @@ def size_filter(labels, MINSIZE=0, MAXSIZE=10000):
 
 
 
+def remove_nuc_from_cyto(labels, img, same_val=False, erosion=False):
+    '''
+    returns cytoplasmic label with nuclei removed:
 
+    labels: cytoplasmic labels 
+    img: nuclear labels
+    same_val: if True, nuclei will only be removed if the cytoplasmic mask has the same label. if False, all nuclei are removed.
+    erosion: if True, applies binary_erosion after removing nuclei
+    '''
+    if same_val:
+        new_labels = np.where(labels == img, 0, labels)
+    else:
+        new_labels = np.where(img > 0, 0, labels)
+
+    if erosion:
+        bin_img = np.where(new_labels > 0, 1, 0)
+        ero_img = binary_erosion(bin_img)
+        return np.where(ero_img, new_labels, 0)
+
+    return new_labels
