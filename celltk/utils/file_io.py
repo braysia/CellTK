@@ -6,6 +6,7 @@ import logging
 import tempfile
 import shutil
 import urllib
+from scipy.ndimage import imread
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +44,13 @@ def lbread(path, nonneg=True):
             return img
         elif img.min() == 32768:
             return img - 32768
-    img = tiff.imread(path)
-    img = uint2int16(img).astype(np.int16)
-    if nonneg:
-        img[img < 0] = 0
+    try:
+        img = tiff.imread(path)
+        img = uint2int16(img).astype(np.int16)
+        if nonneg:
+            img[img < 0] = 0
+    except:
+        img = imread(path)
     return img
 
 

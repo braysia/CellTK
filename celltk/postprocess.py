@@ -2,7 +2,7 @@
 python celltk/postprocess.py -f gap_closing -i c0/img_00000000* -l c2/img_00000000*  -o c3 -p DISPLACEMENT=30
 """
 
-from scipy.ndimage import imread
+from utils.util import imread
 import argparse
 import tifffile as tiff
 from os.path import basename, join
