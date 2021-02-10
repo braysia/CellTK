@@ -6,7 +6,7 @@ from utils.preprocess_utils import homogenize_intensity_n4
 from utils.preprocess_utils import convert_positive, estimate_background_prc
 from utils.preprocess_utils import resize_img
 from utils.preprocess_utils import histogram_matching, wavelet_subtraction_hazen, rolling_ball_subtraction_hazen
-from utils.filters import adaptive_thresh
+from utils.filters import adaptive_thresh, gray_fill_holes
 from utils.cp_functions import align_cross_correlation, align_mutual_information
 from utils.util import imread
 from glob import glob
@@ -17,6 +17,7 @@ from utils.global_holder import holder
 from utils.mi_align import calc_jitters_multiple, calc_crop_coordinates
 from utils.shading_correction import retrieve_ff_ref
 from scipy.ndimage.filters import gaussian_filter
+from segment_operation import constant_thres
 
 logger = logging.getLogger(__name__)
 np.random.seed(0)
@@ -288,10 +289,48 @@ def deep_unet(img, weight_path, region=1):
         pimg (numpy.ndarray): probability map image 
         
     """
+
     from utils.unet_predict import predict
     from utils.file_io import LocalPath
     from utils.global_holder import holder
     with LocalPath(weight_path) as wpath:
         pimg = predict(holder.path, wpath)
     pimg = np.moveaxis(pimg, 0, -1)
-    return pimg[:, :, region]
+    if region == 'None': # handle bug where None is read in as a string 
+        region = None 
+    return pimg[:,:,region]
+
+
+def postprocess_unet(img,interior_prob=0.2,boundary_prob=0.3,set_one=True):
+    """ This function takes a prediction from unet and generates better cytoplasm probabilities.  
+        It thresholds the interior probabilities, fills in small holes and remove the boundaries. 
+    
+    Args:
+        img (np.ndarray): 3d numpy array of the background, boundary and interior probabilities from unet
+        interior_prob (float): probability threshold for interior 
+        boundary_prob (float): probability threshold for boundary 
+        set_one (bool): True: Sets the final interior probabilities to 1 
+    
+    Returns:
+        filled holes numpy.ndarray[np.uint16]): cytoplasm mask probabilities to be used with propagate multisnakes
+    """  
+    print img.shape 
+    interior = img[:,:,2]
+    boundary = img[:,:,1]
+    
+
+    cyto_interior_thresh = constant_thres(interior,THRES=interior_prob)
+    cyto_boundary_thresh = constant_thres(boundary,THRES=boundary_prob)
+
+    filled_holes = gray_fill_holes(cyto_interior_thresh)
+
+    indices_boundary = np.nonzero(cyto_boundary_thresh) 
+
+    filled_holes[indices_boundary[0],indices_boundary[1]] = 0  
+
+    if set_one:
+        indices_filled = np.nonzero(filled_holes)
+        filled_holes[indices_filled[0],indices_filled[1]] = 1
+
+    return filled_holes
+

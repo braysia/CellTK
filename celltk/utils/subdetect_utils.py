@@ -196,6 +196,49 @@ def label_nearest(img, label, nuc, DISTHRES=25):
     comb = np.max(np.dstack((template, nuc)), axis=2).astype(np.uint16)
     return template, comb, nuc_prop, nuc_loc
 
+def label_nearest_or_within(img, label, nuc, DISTHRES=25):
+    """Label objects to the nearest cytoplasm or contained within the cytoplasm.. 
+    """
+    nuc_prop = regionprops(nuc, img, cache=False)
+    sal_prop = regionprops(label, img, cache=False)
+    nuc_loc = [i.centroid for i in regionprops(nuc, img, cache=False)]
+    sal_loc = [i.centroid for i in regionprops(label, img, cache=False)]
+    dist = pairwise_distance(nuc_loc, sal_loc)
+    min_dist_arg = np.argmin(dist, axis=0)
+    template = np.zeros(img.shape, np.uint16)
+
+    # for each bacterial group of pixels found, assign to any overlapping cytoplasm 
+    for num,(idx,sal) in enumerate(zip(min_dist_arg, sal_prop)):
+        
+        nuclear_ids = np.unique(nuc[sal.coords[:,0],sal.coords[:,1]])
+
+        # if it ccompletely overlaps with a cytoplasm
+
+        if (len(nuclear_ids) == 1) and (0 not in nuclear_ids):
+            nuc_id = np.max(nuclear_ids)
+            template[sal.coords[:,0],sal.coords[:,1]] = nuc_id
+        
+        # if it is partially overlapping with 1 cytoplasm and background
+        if (len(nuclear_ids) == 2) and (0 in nuclear_ids): 
+            print "PARTIAL W BACKGROUND"
+            nuc_id = np.max(nuclear_ids)
+            print nuc_id
+            print nuclear_ids
+            template[sal.coords[:,0],sal.coords[:,1]] = nuc_id
+
+        # if it is partially overlapping with 2+ cytoplasm, simply assign it to those pixel values in the nuclear mask image to split it up 
+        elif (len(np.nonzero(nuclear_ids)) >= 2):
+            print "PRINT MULTIPLE CELLS "
+            template[sal.coords[:,0],sal.coords[:,1]] = nuc[sal.coords[:,0],sal.coords[:,1]]
+        
+        else: # if it isn't overlapping with a cytoplasm at all! 
+
+            if dist[idx, num] < DISTHRES:
+                template[sal.coords[:, 0], sal.coords[:, 1]] = nuc_prop[idx].label # assign to the closet cytoplasm 
+      
+    comb = np.max(np.dstack((template, nuc)), axis=2).astype(np.uint16)
+    return template, comb, nuc_prop, nuc_loc
+
 def judge_bad(csig, psig, THRESCHANGE):
     ''' From Covertrack. Trying to adapt this to CellTK. Last updated 08/17/18. Currently not functional
     '''

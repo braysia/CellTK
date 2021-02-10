@@ -9,7 +9,7 @@ import numpy as np
 from scipy.ndimage import morphology, binary_opening
 from skimage.morphology import remove_small_objects
 from utils.labels_handling import convert_labels
-from utils.subdetect_utils import label_high_pass, label_nearest, repair_sal 
+from utils.subdetect_utils import label_high_pass, label_nearest, repair_sal, label_nearest_or_within
 from utils.global_holder import holder
 from segment_operation import constant_thres
 from scipy.ndimage.morphology import binary_erosion
@@ -99,14 +99,20 @@ def watershed_cut(labels, img, MIN_SIGMA=2, MAX_SIGMA=10, THRES=1000):
     return sitk_watershed_intensity(labels, local_maxima)
 
 
-def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=1, keep=False):
+def propagate_multisnakes(labels, img, NITER=3, SMOOTHING=1, lambda1=1, lambda2=1, keep=False,no_shrink=False):
     """
     Higher lambda2 relative to lambda1 gives more outward propagation.
     Setting keep=True will try to keep the values in labels but may slow down computation.
+    Setting no_shrink=True will ensure that the mask can only stay the same shape or grow larger 
     """
+    labels_orig = labels.copy()
     ms = MultiSnakesCombined(img, labels, smoothing=SMOOTHING, lambda1=lambda1, lambda2=lambda2, keep=keep)
     labels = ms.multi_step(niter=NITER)
-    return labels
+    if no_shrink:
+        comb = np.max(np.dstack((labels, labels_orig)), axis=2).astype(np.uint16)
+        return comb
+    else:
+        return labels
 
 
 def laplacian_levelset(labels, img, NITER=100, CURVE=3, PROP=-1):
@@ -223,6 +229,51 @@ def segment_bacteria(nuc, img, slen=3, SIGMA=0.5, THRES=20, CLOSE=20, MINAREA=5,
     labels = remove_small_objects(labels, MINAREA)
     return labels.astype(np.uint16)
 
+def segment_bacteria_within_cyto(nuc, img, slen=3, SIGMA=0.5, THRES=20, CLOSE=20, MINAREA=5,
+                     dist=25, SEGMENT='highpass', ASSIGN=True):
+    """ Segment bacteria using high pass filter or constant thresholding and assign to closest nucleus
+
+    Args:
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): image in bacterial channel
+        slen (int): Size of Gaussian kernel
+        SIGMA (float): Standard deviation for Gaussian kernel
+        THRES (int): Threshold pixel intensity fo real signal 
+        CLOSE (int): Radius for disk used to return morphological closing of the image
+                     (dilation followed by erosion to remove dark spots and connect bright cracks)
+        THRESCHANGE (int): argument unnecessary? 
+        MINAREA (int): minimum area in pixels for a bacterium 
+        dist (int): acceptable distance bac can be from mask 
+        SEGMENT: choose one of 'highpass' or 'constant'.
+        ASSIGN: If False, it does not assign to closest nucleus. 
+    Returns:
+        labels (numpy.ndarray[np.uint16]): bacterial mask labels  
+
+    """
+    if SEGMENT == 'highpass':
+        labels = label_high_pass(img, slen=slen, SIGMA=SIGMA, THRES=THRES, CLOSE=3)
+    elif SEGMENT == 'constant':
+        labels = constant_thres(img, THRES=THRES)
+    if not ASSIGN:
+        return labels.astype(np.uint16)
+    if labels.any():
+        labels, comb, nuc_prop, nuc_loc = label_nearest_or_within(img, labels, nuc, dist)
+    from skimage.morphology import remove_small_objects
+    labels = remove_small_objects(labels, MINAREA)
+    return labels.astype(np.uint16)
+
+def keep_certain_labels(nuc,img):
+    """ Modify labels so that labels with a certain property (i.e. without bacteria) are removed.
+        This function will remove nuclear labels that do not have an associated mask label 
+        nuc (numpy.ndarray): nuclear mask labels
+        img (numpy.ndarray): mask labels for another object 
+    """
+    labels_keep = np.unique(nuc)
+    labels_keep = np.array(np.delete(labels_keep,0))
+    ix = np.in1d(img.ravel(), labels_keep).reshape(img.shape)
+    indices_remove = np.invert(ix)
+    img[indices_remove] = 0 
+    return img
 
 def segment_bacteria_return_cyto_no_bac(nuc, img, slen=3, SIGMA=0.5,THRES=20, CLOSE=20, THRESCHANGE=1000, MINAREA=5, dist=25):
     """ Segment bacteria and assign to closest nucleus and return the mask back without regions containing bacteria
