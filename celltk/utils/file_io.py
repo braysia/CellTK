@@ -50,7 +50,7 @@ def lbread(path, nonneg=True):
         if nonneg:
             img[img < 0] = 0
     except:
-        img = imread(path)
+        img = imread(path)astype(np.int16)
     return img
 
 
