@@ -17,14 +17,42 @@ from scipy.ndimage import imread
 from centrosome.filter import stretch
 
 
-# @jit
-# def stretch(image):
-#     '''Normalize an image to make the minimum zero and maximum one
-#     image - pixel data to be normalized
-#     mask  - optional mask of relevant pixels. None = don't mask
-#     returns the stretched image
-#     '''
-#     return (image - image.min()) / (image.max() - image.min())
+def stretch(image, mask=None):
+    """
+    https://github.com/CellProfiler/centrosome/blob/master/centrosome/filter.py
+    Normalize an image to make the minimum zero and maximum one
+    image - pixel data to be normalized
+    mask  - optional mask of relevant pixels. None = don't mask
+    returns the stretched image
+    """
+    image = np.array(image, float)
+    if np.product(image.shape) == 0:
+        return image
+    if mask is None:
+        minval = np.min(image)
+        maxval = np.max(image)
+        if minval == maxval:
+            if minval < 0:
+                return np.zeros_like(image)
+            elif minval > 1:
+                return np.ones_like(image)
+            return image
+        else:
+            return (image - minval) / (maxval - minval)
+    else:
+        significant_pixels = image[mask]
+        if significant_pixels.size == 0:
+            return image
+        minval = np.min(significant_pixels)
+        maxval = np.max(significant_pixels)
+        if minval == maxval:
+            transformed_image = minval
+        else:
+            transformed_image = (significant_pixels - minval) / (maxval - minval)
+        result = image.copy()
+        image[mask] = transformed_image
+        return image
+
 
 
 class BaseMutualInfoAligner(object):

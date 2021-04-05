@@ -5,7 +5,7 @@ Adapted from from CellProfiler
 import numpy as np
 import scipy.ndimage as scind
 import scipy.sparse
-from centrosome.filter import stretch
+from mi_align import stretch
 from scipy.fftpack import fft2, ifft2
 
 
