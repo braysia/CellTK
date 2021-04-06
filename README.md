@@ -119,6 +119,8 @@ Install the additional package may speed up computation.
 ```
 pip install git+https://github.com/jfrelinger/cython-munkres-wrapper
 ```
+
+You can also pip install each - see  [this](https://gist.github.com/braysia/38c0f905b478f49105160afa354ff565) for example. 
 _________
 
 The other option is to use Docker container.
